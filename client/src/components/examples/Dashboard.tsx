@@ -8,38 +8,38 @@ const mockPasses: ClassPass[] = [
   {
     id: '1',
     studioName: 'CorePower Yoga',
-    passType: '10-Class Package',
     totalClasses: 10,
     remainingClasses: 7,
     purchaseDate: new Date('2024-01-15'),
     expirationDate: new Date('2024-04-15'),
+    notes: null,
   },
   {
     id: '2',
     studioName: 'SoulCycle',
-    passType: 'Monthly Unlimited',
     totalClasses: 20,
     remainingClasses: 12,
     purchaseDate: new Date('2024-01-01'),
     expirationDate: new Date('2024-02-01'),
+    notes: 'Monthly unlimited pass',
   },
   {
     id: '3',
-    studioName: 'Barry\'s Bootcamp',
-    passType: '5-Class Pack',
+    studioName: "Barry's Bootcamp",
     totalClasses: 5,
     remainingClasses: 0,
     purchaseDate: new Date('2023-12-01'),
     expirationDate: new Date('2023-12-31'),
+    notes: null,
   },
   {
     id: '4',
     studioName: 'Orange Theory',
-    passType: '8-Class Package',
     totalClasses: 8,
     remainingClasses: 3,
     purchaseDate: new Date('2024-01-20'),
     expirationDate: new Date('2024-03-20'),
+    notes: 'Great HIIT workouts',
   },
 ];
 
@@ -59,12 +59,16 @@ export default function DashboardExample() {
     console.log('View details for pass:', passId);
   };
 
-  const handleAddPass = (data: InsertClassPass) => {
+  const handleAddPass = (data: InsertClassPass & { purchaseDate: Date }) => {
     console.log('Adding new pass:', data);
     const newPass: ClassPass = {
       id: Date.now().toString(),
-      ...data,
+      studioName: data.studioName,
+      totalClasses: data.totalClasses,
       remainingClasses: data.totalClasses,
+      purchaseDate: data.purchaseDate,
+      expirationDate: data.expirationDate,
+      notes: data.notes || null,
     };
     setPasses(prev => [newPass, ...prev]);
   };

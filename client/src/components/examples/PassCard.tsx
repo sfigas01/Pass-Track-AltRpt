@@ -5,29 +5,29 @@ const mockPasses: ClassPass[] = [
   {
     id: '1',
     studioName: 'CorePower Yoga',
-    passType: '10-Class Package',
     totalClasses: 10,
     remainingClasses: 7,
     purchaseDate: new Date('2024-01-15'),
     expirationDate: new Date('2024-04-15'),
+    notes: null,
   },
   {
     id: '2',
     studioName: 'SoulCycle',
-    passType: 'Unlimited Monthly',
     totalClasses: 20,
     remainingClasses: 12,
     purchaseDate: new Date('2024-01-01'),
     expirationDate: new Date('2024-02-01'),
+    notes: 'Monthly unlimited pass',
   },
   {
     id: '3',
-    studioName: 'Barry\'s Bootcamp',
-    passType: '5-Class Pack',
+    studioName: "Barry's Bootcamp",
     totalClasses: 5,
     remainingClasses: 0,
     purchaseDate: new Date('2023-12-01'),
     expirationDate: new Date('2023-12-31'),
+    notes: null,
   },
 ];
 

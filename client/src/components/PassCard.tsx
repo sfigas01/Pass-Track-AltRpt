@@ -39,7 +39,7 @@ export function PassCard({ pass, onCheckIn, onViewDetails }: PassCardProps) {
             </h3>
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               <Users className="w-3 h-3" />
-              {pass.passType}
+              {pass.totalClasses} classes
             </p>
           </div>
           <Badge variant={getStatusColor()} data-testid={`badge-status-${pass.id}`}>

@@ -6,11 +6,11 @@ import { z } from "zod";
 export const classPasses = pgTable("class_passes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   studioName: text("studio_name").notNull(),
-  passType: text("pass_type").notNull(),
   totalClasses: integer("total_classes").notNull(),
   remainingClasses: integer("remaining_classes").notNull(),
   purchaseDate: timestamp("purchase_date").notNull(),
   expirationDate: timestamp("expiration_date").notNull(),
+  notes: text("notes"),
 });
 
 export const classBookings = pgTable("class_bookings", {
@@ -25,10 +25,11 @@ export const classBookings = pgTable("class_bookings", {
 export const insertClassPassSchema = createInsertSchema(classPasses).omit({
   id: true,
   remainingClasses: true,
+  purchaseDate: true,
 }).extend({
   totalClasses: z.number().min(1).max(50),
   studioName: z.string().min(1).max(100),
-  passType: z.string().min(1).max(50),
+  notes: z.string().optional(),
 });
 
 export const insertClassBookingSchema = createInsertSchema(classBookings).omit({

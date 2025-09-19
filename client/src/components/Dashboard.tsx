@@ -13,7 +13,7 @@ interface DashboardProps {
   passes?: ClassPass[];
   onCheckIn?: (passId: string) => void;
   onViewDetails?: (passId: string) => void;
-  onAddPass?: (data: InsertClassPass) => void;
+  onAddPass?: (data: InsertClassPass & { purchaseDate: Date }) => void;
 }
 
 export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass }: DashboardProps) {
@@ -25,7 +25,7 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass }: 
   // Filter passes based on search and status
   const filteredPasses = passes.filter(pass => {
     const matchesSearch = pass.studioName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         pass.passType.toLowerCase().includes(searchTerm.toLowerCase());
+                         (pass.notes && pass.notes.toLowerCase().includes(searchTerm.toLowerCase()));
     
     if (filterStatus === "all") return matchesSearch;
     
@@ -84,7 +84,7 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass }: 
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search studios or pass types..."
+              placeholder="Search studios or notes..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"

@@ -33,12 +33,16 @@ export class MemStorage implements IStorage {
     return Array.from(this.classPasses.values());
   }
 
-  async createClassPass(insertPass: InsertClassPass): Promise<ClassPass> {
+  async createClassPass(insertPass: InsertClassPass & { purchaseDate: Date }): Promise<ClassPass> {
     const id = randomUUID();
     const pass: ClassPass = { 
-      ...insertPass, 
       id,
-      remainingClasses: insertPass.totalClasses
+      studioName: insertPass.studioName,
+      totalClasses: insertPass.totalClasses,
+      remainingClasses: insertPass.totalClasses,
+      purchaseDate: insertPass.purchaseDate,
+      expirationDate: insertPass.expirationDate,
+      notes: insertPass.notes || null,
     };
     this.classPasses.set(id, pass);
     return pass;
