@@ -9,7 +9,7 @@ export const classPasses = pgTable("class_passes", {
   totalClasses: integer("total_classes").notNull(),
   remainingClasses: integer("remaining_classes").notNull(),
   purchaseDate: timestamp("purchase_date").notNull(),
-  expirationDate: timestamp("expiration_date").notNull(),
+  expirationDate: timestamp("expiration_date"),
   cost: integer("cost").notNull(), // cost in cents to avoid decimal issues
   notes: text("notes"),
 });
@@ -32,6 +32,7 @@ export const insertClassPassSchema = createInsertSchema(classPasses).omit({
   studioName: z.string().min(1).max(100),
   cost: z.number().min(0), // cost in cents
   notes: z.string().optional(),
+  expirationDate: z.date().optional(),
 });
 
 export const insertClassBookingSchema = createInsertSchema(classBookings).omit({

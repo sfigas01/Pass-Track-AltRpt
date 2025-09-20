@@ -15,17 +15,19 @@ interface PassCardProps {
 
 export function PassCard({ pass, onCheckIn, onViewDetails, onExtend }: PassCardProps) {
   const usagePercentage = ((pass.totalClasses - pass.remainingClasses) / pass.totalClasses) * 100;
-  const daysUntilExpiry = differenceInDays(new Date(pass.expirationDate), new Date());
+  const daysUntilExpiry = pass.expirationDate ? differenceInDays(new Date(pass.expirationDate), new Date()) : null;
   
   const getStatusColor = () => {
-    if (daysUntilExpiry < 0) return "destructive";
-    if (daysUntilExpiry <= 7) return "secondary"; // Warning color
+    if (!pass.expirationDate) return "default";
+    if (daysUntilExpiry! < 0) return "destructive";
+    if (daysUntilExpiry! <= 7) return "secondary"; // Warning color
     return "default";
   };
 
   const getStatusText = () => {
-    if (daysUntilExpiry < 0) return "Expired";
-    if (daysUntilExpiry <= 7) return `${daysUntilExpiry} days left`;
+    if (!pass.expirationDate) return "No expiration";
+    if (daysUntilExpiry! < 0) return "Expired";
+    if (daysUntilExpiry! <= 7) return `${daysUntilExpiry} days left`;
     return `${daysUntilExpiry} days left`;
   };
 
@@ -70,7 +72,12 @@ export function PassCard({ pass, onCheckIn, onViewDetails, onExtend }: PassCardP
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            <span>Expires {format(new Date(pass.expirationDate), 'MMM d, yyyy')}</span>
+            <span>
+              {pass.expirationDate 
+                ? `Expires ${format(new Date(pass.expirationDate), 'MMM d, yyyy')}`
+                : 'Never expires'
+              }
+            </span>
           </div>
         </div>
 
@@ -79,7 +86,7 @@ export function PassCard({ pass, onCheckIn, onViewDetails, onExtend }: PassCardP
           <Button
             size="sm"
             className="flex-1"
-            disabled={pass.remainingClasses === 0 || daysUntilExpiry < 0}
+            disabled={pass.remainingClasses === 0 || (daysUntilExpiry !== null && daysUntilExpiry < 0)}
             onClick={() => onCheckIn?.(pass.id)}
             data-testid={`button-checkin-${pass.id}`}
           >

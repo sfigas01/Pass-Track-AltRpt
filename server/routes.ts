@@ -37,7 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const passData = insertClassPassSchema.parse({
         ...req.body,
-        expirationDate: new Date(req.body.expirationDate)
+        expirationDate: req.body.expirationDate ? new Date(req.body.expirationDate) : undefined
       });
 
       const newPass = await storage.createClassPass({

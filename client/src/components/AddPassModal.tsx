@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CalendarIcon, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -21,11 +22,12 @@ interface AddPassModalProps {
 export function AddPassModal({ open, onOpenChange, onSubmit, children }: AddPassModalProps) {
   const [formData, setFormData] = useState<Partial<InsertClassPass>>({});
   const [expirationDate, setExpirationDate] = useState<Date>();
+  const [doesNotExpire, setDoesNotExpire] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.studioName || !formData.totalClasses || !formData.cost || !expirationDate) {
+    if (!formData.studioName || !formData.totalClasses || !formData.cost || (!expirationDate && !doesNotExpire)) {
       return;
     }
 
@@ -34,7 +36,7 @@ export function AddPassModal({ open, onOpenChange, onSubmit, children }: AddPass
       totalClasses: formData.totalClasses,
       cost: formData.cost,
       notes: formData.notes || undefined,
-      expirationDate,
+      expirationDate: doesNotExpire ? undefined : expirationDate,
       purchaseDate: new Date(), // Auto-fill with today's date
     };
 
@@ -43,6 +45,7 @@ export function AddPassModal({ open, onOpenChange, onSubmit, children }: AddPass
     // Reset form
     setFormData({});
     setExpirationDate(undefined);
+    setDoesNotExpire(false);
     onOpenChange?.(false);
   };
 
@@ -109,29 +112,58 @@ export function AddPassModal({ open, onOpenChange, onSubmit, children }: AddPass
 
           <div className="space-y-2">
             <Label>Expiration Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !expirationDate && "text-muted-foreground"
-                  )}
-                  data-testid="button-expiration-date"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {expirationDate ? format(expirationDate, "MMM d, yyyy") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={expirationDate}
-                  onSelect={setExpirationDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            
+            <div className="flex items-center space-x-2 mb-2">
+              <Checkbox
+                id="does-not-expire"
+                checked={doesNotExpire}
+                onCheckedChange={(checked) => {
+                  setDoesNotExpire(!!checked);
+                  if (checked) {
+                    setExpirationDate(undefined);
+                  }
+                }}
+                data-testid="checkbox-does-not-expire"
+              />
+              <Label
+                htmlFor="does-not-expire"
+                className="text-sm font-normal cursor-pointer"
+              >
+                This pass does not expire
+              </Label>
+            </div>
+
+            {!doesNotExpire && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !expirationDate && "text-muted-foreground"
+                    )}
+                    data-testid="button-expiration-date"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {expirationDate ? format(expirationDate, "MMM d, yyyy") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={expirationDate}
+                    onSelect={setExpirationDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
+
+            {doesNotExpire && (
+              <div className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-md">
+                This pass will never expire and can be used indefinitely.
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
