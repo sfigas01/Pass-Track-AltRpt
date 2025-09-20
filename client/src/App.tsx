@@ -79,6 +79,28 @@ function PassesRouter() {
     },
   });
 
+  // Mutation for extending a pass
+  const extendPassMutation = useMutation({
+    mutationFn: async ({ passId, data }: { passId: string; data: { additionalClasses: number; additionalCost: number } }) => {
+      const response = await apiRequest('POST', `/api/class-passes/${passId}/extend`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/class-passes'] });
+      toast({
+        title: "Pass Extended",
+        description: "Your class pass has been extended successfully!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to extend pass",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCheckIn = (passId: string) => {
     checkInMutation.mutate(passId);
   };
@@ -92,6 +114,10 @@ function PassesRouter() {
     addPassMutation.mutate(data);
   };
 
+  const handleExtendPass = (passId: string, data: { additionalClasses: number; additionalCost: number }) => {
+    extendPassMutation.mutate({ passId, data });
+  };
+
   return (
     <Switch>
       <Route path="/">
@@ -100,6 +126,7 @@ function PassesRouter() {
           onCheckIn={handleCheckIn}
           onViewDetails={handleViewDetails}
           onAddPass={handleAddPass}
+          onExtendPass={handleExtendPass}
         />
       </Route>
       <Route path="/schedule">

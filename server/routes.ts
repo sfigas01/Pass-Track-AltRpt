@@ -113,6 +113,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/class-passes/:id/extend - Extend a class pass with additional classes
+  app.post("/api/class-passes/:id/extend", async (req, res) => {
+    try {
+      const extendSchema = z.object({
+        additionalClasses: z.number().min(1).max(50),
+        additionalCost: z.number().min(0)
+      });
+
+      const { additionalClasses, additionalCost } = extendSchema.parse(req.body);
+
+      const pass = await storage.getClassPass(req.params.id);
+      if (!pass) {
+        return res.status(404).json({ message: "Class pass not found" });
+      }
+
+      const updatedPass = await storage.updateClassPass(req.params.id, {
+        totalClasses: pass.totalClasses + additionalClasses,
+        remainingClasses: pass.remainingClasses + additionalClasses,
+        cost: pass.cost + Math.round(additionalCost * 100) // Convert dollars to cents
+      });
+
+      res.json(updatedPass);
+    } catch (error) {
+      console.error("Error extending class pass:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to extend class pass" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { PassCard } from "./PassCard";
 import { AddPassModal } from "./AddPassModal";
+import { ExtendPassModal } from "./ExtendPassModal";
 import { FloatingActionButton } from "./FloatingActionButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +17,14 @@ interface DashboardProps {
   onCheckIn?: (passId: string) => void;
   onViewDetails?: (passId: string) => void;
   onAddPass?: (data: InsertClassPass & { purchaseDate: Date }) => void;
+  onExtendPass?: (passId: string, data: { additionalClasses: number; additionalCost: number }) => void;
 }
 
-export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass }: DashboardProps) {
+export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, onExtendPass }: DashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [extendingPass, setExtendingPass] = useState<ClassPass | null>(null);
   const { theme, setTheme } = useTheme();
 
   // Filter passes based on search and status
@@ -226,6 +229,7 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass }: 
                 pass={pass}
                 onCheckIn={onCheckIn}
                 onViewDetails={onViewDetails}
+                onExtend={() => setExtendingPass(pass)}
               />
             ))}
           </div>
@@ -242,6 +246,19 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass }: 
         onSubmit={(data) => {
           onAddPass?.(data);
           setShowAddModal(false);
+        }}
+      />
+
+      {/* Extend Pass Modal */}
+      <ExtendPassModal
+        open={!!extendingPass}
+        onOpenChange={(open) => !open && setExtendingPass(null)}
+        pass={extendingPass || undefined}
+        onSubmit={(data) => {
+          if (extendingPass) {
+            onExtendPass?.(extendingPass.id, data);
+            setExtendingPass(null);
+          }
         }}
       />
     </div>

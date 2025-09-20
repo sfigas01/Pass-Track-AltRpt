@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, MapPin, Users, Clock } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, Plus } from "lucide-react";
 import { type ClassPass } from "@shared/schema";
 import { differenceInDays, format } from "date-fns";
 
@@ -10,9 +10,10 @@ interface PassCardProps {
   pass: ClassPass;
   onCheckIn?: (id: string) => void;
   onViewDetails?: (id: string) => void;
+  onExtend?: (id: string) => void;
 }
 
-export function PassCard({ pass, onCheckIn, onViewDetails }: PassCardProps) {
+export function PassCard({ pass, onCheckIn, onViewDetails, onExtend }: PassCardProps) {
   const usagePercentage = ((pass.totalClasses - pass.remainingClasses) / pass.totalClasses) * 100;
   const daysUntilExpiry = differenceInDays(new Date(pass.expirationDate), new Date());
   
@@ -84,6 +85,15 @@ export function PassCard({ pass, onCheckIn, onViewDetails }: PassCardProps) {
           >
             <Clock className="w-3 h-3 mr-1" />
             Check In
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onExtend?.(pass.id)}
+            data-testid={`button-extend-${pass.id}`}
+          >
+            <Plus className="w-3 h-3 mr-1" />
+            Extend
           </Button>
           <Button
             size="sm"
