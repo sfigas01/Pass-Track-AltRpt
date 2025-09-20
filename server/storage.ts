@@ -1,5 +1,6 @@
-import { type ClassPass, type InsertClassPass, type ClassBooking, type InsertClassBooking } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { type ClassPass, type InsertClassPass, type ClassBooking, type InsertClassBooking, classPasses, classBookings } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -7,7 +8,7 @@ import { randomUUID } from "crypto";
 export interface IStorage {
   getClassPass(id: string): Promise<ClassPass | undefined>;
   getAllClassPasses(): Promise<ClassPass[]>;
-  createClassPass(pass: InsertClassPass): Promise<ClassPass>;
+  createClassPass(pass: InsertClassPass & { purchaseDate: Date }): Promise<ClassPass>;
   updateClassPass(id: string, updates: Partial<ClassPass>): Promise<ClassPass | undefined>;
   deleteClassPass(id: string): Promise<boolean>;
   
@@ -16,72 +17,68 @@ export interface IStorage {
   createClassBooking(booking: InsertClassBooking): Promise<ClassBooking>;
 }
 
-export class MemStorage implements IStorage {
-  private classPasses: Map<string, ClassPass>;
-  private classBookings: Map<string, ClassBooking>;
-
-  constructor() {
-    this.classPasses = new Map();
-    this.classBookings = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
   async getClassPass(id: string): Promise<ClassPass | undefined> {
-    return this.classPasses.get(id);
+    const [pass] = await db.select().from(classPasses).where(eq(classPasses.id, id));
+    return pass || undefined;
   }
 
   async getAllClassPasses(): Promise<ClassPass[]> {
-    return Array.from(this.classPasses.values());
+    return await db.select().from(classPasses);
   }
 
   async createClassPass(insertPass: InsertClassPass & { purchaseDate: Date }): Promise<ClassPass> {
-    const id = randomUUID();
-    const pass: ClassPass = { 
-      id,
-      studioName: insertPass.studioName,
-      totalClasses: insertPass.totalClasses,
-      remainingClasses: insertPass.totalClasses,
-      purchaseDate: insertPass.purchaseDate,
-      expirationDate: insertPass.expirationDate,
-      notes: insertPass.notes || null,
-    };
-    this.classPasses.set(id, pass);
+    const [pass] = await db
+      .insert(classPasses)
+      .values({
+        studioName: insertPass.studioName,
+        totalClasses: insertPass.totalClasses,
+        remainingClasses: insertPass.totalClasses,
+        purchaseDate: insertPass.purchaseDate,
+        expirationDate: insertPass.expirationDate,
+        cost: insertPass.cost,
+        notes: insertPass.notes || null,
+      })
+      .returning();
     return pass;
   }
 
   async updateClassPass(id: string, updates: Partial<ClassPass>): Promise<ClassPass | undefined> {
-    const existingPass = this.classPasses.get(id);
-    if (!existingPass) return undefined;
-    
-    const updatedPass = { ...existingPass, ...updates };
-    this.classPasses.set(id, updatedPass);
-    return updatedPass;
+    const [updatedPass] = await db
+      .update(classPasses)
+      .set(updates)
+      .where(eq(classPasses.id, id))
+      .returning();
+    return updatedPass || undefined;
   }
 
   async deleteClassPass(id: string): Promise<boolean> {
-    return this.classPasses.delete(id);
+    const result = await db
+      .delete(classPasses)
+      .where(eq(classPasses.id, id));
+    return (result.rowCount || 0) > 0;
   }
 
   async getClassBooking(id: string): Promise<ClassBooking | undefined> {
-    return this.classBookings.get(id);
+    const [booking] = await db.select().from(classBookings).where(eq(classBookings.id, id));
+    return booking || undefined;
   }
 
   async getClassBookingsByPassId(passId: string): Promise<ClassBooking[]> {
-    return Array.from(this.classBookings.values()).filter(
-      booking => booking.passId === passId
-    );
+    return await db.select().from(classBookings).where(eq(classBookings.passId, passId));
   }
 
   async createClassBooking(insertBooking: InsertClassBooking): Promise<ClassBooking> {
-    const id = randomUUID();
-    const booking: ClassBooking = { 
-      ...insertBooking,
-      instructorName: insertBooking.instructorName ?? null,
-      id,
-      checkedIn: new Date()
-    };
-    this.classBookings.set(id, booking);
+    const [booking] = await db
+      .insert(classBookings)
+      .values({
+        ...insertBooking,
+        instructorName: insertBooking.instructorName ?? null,
+        checkedIn: new Date(),
+      })
+      .returning();
     return booking;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
