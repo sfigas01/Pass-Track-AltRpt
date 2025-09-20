@@ -94,7 +94,7 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass }: 
   }, [passes]);
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background border-b px-4 py-3">
         <div className="flex items-center justify-between mb-3">
@@ -200,7 +200,7 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass }: 
       )}
 
       {/* Content */}
-      <main className="flex-1 overflow-auto px-4 py-4 pb-20">
+      <main className="flex-1 px-4 py-4 pb-32">
         {emptyState ? (
           <div className="flex flex-col items-center justify-center h-64 text-center" data-testid="empty-state">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">

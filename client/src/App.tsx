@@ -131,7 +131,7 @@ function App() {
       <TooltipProvider>
         <ThemeProvider defaultTheme="light">
           <div className="h-screen flex flex-col bg-background">
-            <main className="flex-1 overflow-hidden">
+            <main className="flex-1">
               <PassesRouter />
             </main>
             <BottomNav 
