@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { PassCard } from "./PassCard";
 import { AddPassModal } from "./AddPassModal";
 import { FloatingActionButton } from "./FloatingActionButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Moon, Sun } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Search, Filter, Moon, Sun, DollarSign, TrendingUp } from "lucide-react";
 import { type ClassPass, type InsertClassPass } from "@shared/schema";
 import { useTheme } from "./ThemeProvider";
 
@@ -63,6 +64,29 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass }: 
 
   const emptyState = getEmptyStateMessage();
 
+  // Calculate spending analytics
+  const spendingAnalytics = useMemo(() => {
+    const totalSpent = passes.reduce((sum, pass) => sum + pass.cost, 0);
+    
+    const spendingByStudio = passes.reduce((acc, pass) => {
+      if (!acc[pass.studioName]) {
+        acc[pass.studioName] = 0;
+      }
+      acc[pass.studioName] += pass.cost;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const topStudio = Object.entries(spendingByStudio)
+      .sort(([,a], [,b]) => b - a)[0];
+
+    return {
+      totalSpent,
+      spendingByStudio,
+      topStudio: topStudio ? { name: topStudio[0], amount: topStudio[1] } : null,
+      averagePerPass: passes.length > 0 ? totalSpent / passes.length : 0,
+    };
+  }, [passes]);
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
@@ -105,6 +129,48 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass }: 
           </Select>
         </div>
       </header>
+
+      {/* Spending Analytics */}
+      {passes.length > 0 && (
+        <section className="px-4 py-3 bg-muted/30 border-b">
+          <div className="grid grid-cols-2 gap-3">
+            <Card className="p-3">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-primary" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground">Total Spent</p>
+                  <p className="text-lg font-semibold" data-testid="text-total-spent">
+                    ${(spendingAnalytics.totalSpent / 100).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </Card>
+            
+            <Card className="p-3">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-primary" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground">Avg per Pass</p>
+                  <p className="text-lg font-semibold" data-testid="text-avg-spent">
+                    ${(spendingAnalytics.averagePerPass / 100).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </div>
+          
+          {spendingAnalytics.topStudio && (
+            <div className="mt-3 text-center">
+              <p className="text-xs text-muted-foreground">
+                Most spent: <span className="font-medium text-foreground">{spendingAnalytics.topStudio.name}</span> 
+                <span className="text-primary font-semibold ml-1">
+                  ${(spendingAnalytics.topStudio.amount / 100).toFixed(2)}
+                </span>
+              </p>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Content */}
       <main className="flex-1 overflow-auto px-4 py-4 pb-20">

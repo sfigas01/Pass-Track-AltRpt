@@ -25,13 +25,14 @@ export function AddPassModal({ open, onOpenChange, onSubmit, children }: AddPass
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.studioName || !formData.totalClasses || !expirationDate) {
+    if (!formData.studioName || !formData.totalClasses || !formData.cost || !expirationDate) {
       return;
     }
 
     const passData = {
       studioName: formData.studioName,
       totalClasses: formData.totalClasses,
+      cost: formData.cost,
       notes: formData.notes || undefined,
       expirationDate,
       purchaseDate: new Date(), // Auto-fill with today's date
@@ -82,6 +83,28 @@ export function AddPassModal({ open, onOpenChange, onSubmit, children }: AddPass
               data-testid="input-total-classes"
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="cost">Cost</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
+              <Input
+                id="cost"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="120.00"
+                className="pl-8"
+                value={formData.cost ? (formData.cost / 100).toFixed(2) : ''}
+                onChange={(e) => {
+                  const dollarValue = parseFloat(e.target.value) || 0;
+                  updateFormData('cost', Math.round(dollarValue * 100)); // Convert to cents
+                }}
+                data-testid="input-cost"
+                required
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

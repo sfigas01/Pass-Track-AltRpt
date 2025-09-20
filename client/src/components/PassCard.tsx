@@ -37,10 +37,15 @@ export function PassCard({ pass, onCheckIn, onViewDetails }: PassCardProps) {
             <h3 className="font-semibold text-base" data-testid={`text-studio-${pass.id}`}>
               {pass.studioName}
             </h3>
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              {pass.totalClasses} classes
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                {pass.totalClasses} classes
+              </p>
+              <p className="text-sm font-medium text-primary">
+                ${(pass.cost / 100).toFixed(2)}
+              </p>
+            </div>
           </div>
           <Badge variant={getStatusColor()} data-testid={`badge-status-${pass.id}`}>
             {getStatusText()}
