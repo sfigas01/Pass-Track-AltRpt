@@ -159,14 +159,37 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass }: 
             </Card>
           </div>
           
-          {spendingAnalytics.topStudio && (
-            <div className="mt-3 text-center">
-              <p className="text-xs text-muted-foreground">
-                Most spent: <span className="font-medium text-foreground">{spendingAnalytics.topStudio.name}</span> 
-                <span className="text-primary font-semibold ml-1">
-                  ${(spendingAnalytics.topStudio.amount / 100).toFixed(2)}
-                </span>
-              </p>
+          {Object.keys(spendingAnalytics.spendingByStudio).length > 1 && (
+            <div className="mt-3">
+              <h4 className="text-xs font-medium text-muted-foreground mb-2 text-center">Spending by Studio</h4>
+              <div className="space-y-2">
+                {Object.entries(spendingAnalytics.spendingByStudio)
+                  .sort(([,a], [,b]) => b - a)
+                  .map(([studioName, amount]) => {
+                    const percentage = spendingAnalytics.totalSpent > 0 
+                      ? (amount / spendingAnalytics.totalSpent * 100).toFixed(0)
+                      : '0';
+                    
+                    return (
+                      <div 
+                        key={studioName} 
+                        className="flex items-center justify-between py-1 px-2 rounded-md bg-background"
+                        data-testid={`row-studio-${studioName.replace(/\s+/g, '-').toLowerCase()}`}
+                      >
+                        <span className="text-xs font-medium truncate flex-1 mr-2">
+                          {studioName}
+                        </span>
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="text-muted-foreground">{percentage}%</span>
+                          <span className="font-semibold text-primary">
+                            ${(amount / 100).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                }
+              </div>
             </div>
           )}
         </section>
