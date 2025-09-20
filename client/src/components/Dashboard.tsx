@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Filter, Moon, Sun, DollarSign, TrendingUp } from "lucide-react";
+import { Search, Filter, Moon, Sun, DollarSign } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { type ClassPass, type InsertClassPass } from "@shared/schema";
 import { useTheme } from "./ThemeProvider";
 
@@ -76,14 +77,19 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass }: 
       return acc;
     }, {} as Record<string, number>);
 
-    const topStudio = Object.entries(spendingByStudio)
-      .sort(([,a], [,b]) => b - a)[0];
+    // Generate colors for pie chart
+    const colors = ['#8b5cf6', '#06b6d4', '#f59e0b', '#10b981', '#ef4444', '#f97316', '#3b82f6', '#ec4899'];
+    
+    const pieData = Object.entries(spendingByStudio).map(([name, amount], index) => ({
+      name,
+      value: amount / 100, // Convert cents to dollars for display
+      color: colors[index % colors.length],
+    }));
 
     return {
       totalSpent,
       spendingByStudio,
-      topStudio: topStudio ? { name: topStudio[0], amount: topStudio[1] } : null,
-      averagePerPass: passes.length > 0 ? totalSpent / passes.length : 0,
+      pieData,
     };
   }, [passes]);
 
@@ -133,64 +139,62 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass }: 
       {/* Spending Analytics */}
       {passes.length > 0 && (
         <section className="px-4 py-3 bg-muted/30 border-b">
-          <div className="grid grid-cols-2 gap-3">
-            <Card className="p-3">
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-primary" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground">Total Spent</p>
-                  <p className="text-lg font-semibold" data-testid="text-total-spent">
-                    ${(spendingAnalytics.totalSpent / 100).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </Card>
-            
-            <Card className="p-3">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground">Avg per Pass</p>
-                  <p className="text-lg font-semibold" data-testid="text-avg-spent">
-                    ${(spendingAnalytics.averagePerPass / 100).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
-          
-          {Object.keys(spendingAnalytics.spendingByStudio).length > 1 && (
-            <div className="mt-3">
-              <h4 className="text-xs font-medium text-muted-foreground mb-2 text-center">Spending by Studio</h4>
-              <div className="space-y-2">
-                {Object.entries(spendingAnalytics.spendingByStudio)
-                  .sort(([,a], [,b]) => b - a)
-                  .map(([studioName, amount]) => {
-                    const percentage = spendingAnalytics.totalSpent > 0 
-                      ? (amount / spendingAnalytics.totalSpent * 100).toFixed(0)
-                      : '0';
-                    
-                    return (
-                      <div 
-                        key={studioName} 
-                        className="flex items-center justify-between py-1 px-2 rounded-md bg-background"
-                        data-testid={`row-studio-${studioName.replace(/\s+/g, '-').toLowerCase()}`}
-                      >
-                        <span className="text-xs font-medium truncate flex-1 mr-2">
-                          {studioName}
-                        </span>
-                        <div className="flex items-center gap-1 text-xs">
-                          <span className="text-muted-foreground">{percentage}%</span>
-                          <span className="font-semibold text-primary">
-                            ${(amount / 100).toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })
-                }
+          {/* Total Spent Card */}
+          <Card className="p-4 mb-3">
+            <div className="flex items-center gap-3">
+              <DollarSign className="w-5 h-5 text-primary" />
+              <div>
+                <p className="text-sm text-muted-foreground">Total Spent</p>
+                <p className="text-2xl font-bold" data-testid="text-total-spent">
+                  ${(spendingAnalytics.totalSpent / 100).toFixed(2)}
+                </p>
               </div>
             </div>
+          </Card>
+          
+          {/* Pie Chart */}
+          {spendingAnalytics.pieData.length > 1 && (
+            <Card className="p-4">
+              <h4 className="text-sm font-medium text-center mb-3">Spending by Studio</h4>
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={spendingAnalytics.pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={40}
+                      outerRadius={80}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {spendingAnalytics.pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {spendingAnalytics.pieData.map((entry, index) => (
+                  <div 
+                    key={entry.name} 
+                    className="flex items-center gap-2 text-xs"
+                    data-testid={`legend-${entry.name.replace(/\s+/g, '-').toLowerCase()}`}
+                  >
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: entry.color }}
+                    />
+                    <span className="truncate font-medium">{entry.name}</span>
+                    <span className="text-muted-foreground">${entry.value.toFixed(0)}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
           )}
         </section>
       )}
