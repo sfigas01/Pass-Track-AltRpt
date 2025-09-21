@@ -24,7 +24,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllClassPasses(): Promise<ClassPass[]> {
-    return await db.select().from(classPasses);
+    return await db.select().from(classPasses).orderBy(classPasses.purchaseDate);
   }
 
   async createClassPass(insertPass: InsertClassPass & { purchaseDate: Date }): Promise<ClassPass> {

@@ -28,7 +28,7 @@ export const insertClassPassSchema = createInsertSchema(classPasses).omit({
   remainingClasses: true,
   purchaseDate: true,
 }).extend({
-  totalClasses: z.number().min(1).max(50),
+  totalClasses: z.number().min(1).max(999),
   studioName: z.string().min(1).max(100),
   cost: z.number().min(0), // cost in cents
   notes: z.string().optional(),

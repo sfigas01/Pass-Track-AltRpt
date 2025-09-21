@@ -34,6 +34,19 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
     
     if (filterStatus === "all") return matchesSearch;
     
+    // Handle non-expiring passes (where expirationDate is null)
+    if (!pass.expirationDate) {
+      switch (filterStatus) {
+        case "active":
+          return matchesSearch && pass.remainingClasses > 0;
+        case "expiring":
+        case "expired":
+          return false; // Non-expiring passes can't be expiring or expired
+        default:
+          return matchesSearch;
+      }
+    }
+    
     const daysUntilExpiry = Math.ceil((new Date(pass.expirationDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
     
     switch (filterStatus) {
@@ -139,71 +152,9 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
         </div>
       </header>
 
-      {/* Spending Analytics */}
-      {passes.length > 0 && (
-        <section className="px-4 py-3 bg-muted/30 border-b">
-          {/* Total Spent Card */}
-          <Card className="p-4 mb-3">
-            <div className="flex items-center gap-3">
-              <DollarSign className="w-5 h-5 text-primary" />
-              <div>
-                <p className="text-sm text-muted-foreground">Total Spent</p>
-                <p className="text-2xl font-bold" data-testid="text-total-spent">
-                  ${(spendingAnalytics.totalSpent / 100).toFixed(2)}
-                </p>
-              </div>
-            </div>
-          </Card>
-          
-          {/* Pie Chart */}
-          {spendingAnalytics.pieData.length > 1 && (
-            <Card className="p-4">
-              <h4 className="text-sm font-medium text-center mb-3">Spending by Studio</h4>
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={spendingAnalytics.pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={80}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {spendingAnalytics.pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {spendingAnalytics.pieData.map((entry, index) => (
-                  <div 
-                    key={entry.name} 
-                    className="flex items-center gap-2 text-xs"
-                    data-testid={`legend-${entry.name.replace(/\s+/g, '-').toLowerCase()}`}
-                  >
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: entry.color }}
-                    />
-                    <span className="truncate font-medium">{entry.name}</span>
-                    <span className="text-muted-foreground">${entry.value.toFixed(0)}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-        </section>
-      )}
 
       {/* Content */}
-      <main className="flex-1 px-4 py-4 pb-32">
+      <main className="flex-1 px-4 py-4">
         {emptyState ? (
           <div className="flex flex-col items-center justify-center h-64 text-center" data-testid="empty-state">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
@@ -222,17 +173,82 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
             )}
           </div>
         ) : (
-          <div className="space-y-4" data-testid="passes-list">
-            {filteredPasses.map((pass) => (
-              <PassCard
-                key={pass.id}
-                pass={pass}
-                onCheckIn={onCheckIn}
-                onViewDetails={onViewDetails}
-                onExtend={() => setExtendingPass(pass)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="space-y-4 mb-6" data-testid="passes-list">
+              {filteredPasses.map((pass) => (
+                <PassCard
+                  key={pass.id}
+                  pass={pass}
+                  onCheckIn={onCheckIn}
+                  onViewDetails={onViewDetails}
+                  onExtend={() => setExtendingPass(pass)}
+                />
+              ))}
+            </div>
+            
+            {/* Spending Analytics - Moved to bottom */}
+            {passes.length > 0 && (
+              <section className="pb-32">
+                {/* Total Spent Card */}
+                <Card className="p-4 mb-3">
+                  <div className="flex items-center gap-3">
+                    <DollarSign className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Spent</p>
+                      <p className="text-2xl font-bold" data-testid="text-total-spent">
+                        ${(spendingAnalytics.totalSpent / 100).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+                
+                {/* Pie Chart */}
+                {spendingAnalytics.pieData.length > 1 && (
+                  <Card className="p-4">
+                    <h4 className="text-sm font-medium text-center mb-3">Spending by Studio</h4>
+                    <div className="h-48">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={spendingAnalytics.pieData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={40}
+                            outerRadius={80}
+                            paddingAngle={2}
+                            dataKey="value"
+                          >
+                            {spendingAnalytics.pieData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip 
+                            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      {spendingAnalytics.pieData.map((entry, index) => (
+                        <div 
+                          key={entry.name} 
+                          className="flex items-center gap-2 text-xs"
+                          data-testid={`legend-${entry.name.replace(/\s+/g, '-').toLowerCase()}`}
+                        >
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: entry.color }}
+                          />
+                          <span className="truncate font-medium">{entry.name}</span>
+                          <span className="text-muted-foreground">${entry.value.toFixed(0)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+              </section>
+            )}
+          </>
         )}
       </main>
 

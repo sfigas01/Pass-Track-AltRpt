@@ -79,7 +79,6 @@ export function AddPassModal({ open, onOpenChange, onSubmit, children }: AddPass
               id="totalClasses"
               type="number"
               min="1"
-              max="50"
               placeholder="10"
               value={formData.totalClasses || ''}
               onChange={(e) => updateFormData('totalClasses', parseInt(e.target.value) || 0)}
@@ -94,15 +93,18 @@ export function AddPassModal({ open, onOpenChange, onSubmit, children }: AddPass
               <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
               <Input
                 id="cost"
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
                 placeholder="120.00"
                 className="pl-8"
                 value={formData.cost ? (formData.cost / 100).toFixed(2) : ''}
                 onChange={(e) => {
-                  const dollarValue = parseFloat(e.target.value) || 0;
-                  updateFormData('cost', Math.round(dollarValue * 100)); // Convert to cents
+                  // Allow any input but only parse valid numbers
+                  const inputValue = e.target.value;
+                  if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                    const dollarValue = parseFloat(inputValue) || 0;
+                    updateFormData('cost', Math.round(dollarValue * 100)); // Convert to cents
+                  }
                 }}
                 data-testid="input-cost"
                 required
