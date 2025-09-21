@@ -2,12 +2,11 @@ import { useState, useMemo } from "react";
 import { PassCard } from "./PassCard";
 import { AddPassModal } from "./AddPassModal";
 import { ExtendPassModal } from "./ExtendPassModal";
-import { FloatingActionButton } from "./FloatingActionButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Filter, Moon, Sun, DollarSign } from "lucide-react";
+import { Search, Filter, Moon, Sun, DollarSign, Plus } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { type ClassPass, type InsertClassPass } from "@shared/schema";
 import { useTheme } from "./ThemeProvider";
@@ -150,8 +149,19 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
             </SelectContent>
           </Select>
         </div>
+        
+        {/* Add Pass Button */}
+        <div className="px-4 py-3 border-b">
+          <Button 
+            onClick={() => setShowAddModal(true)}
+            className="w-full"
+            data-testid="button-add-pass"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Pass
+          </Button>
+        </div>
       </header>
-
 
       {/* Content */}
       <main className="flex-1 px-4 py-4">
@@ -252,8 +262,6 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
         )}
       </main>
 
-      {/* Floating Action Button */}
-      <FloatingActionButton onClick={() => setShowAddModal(true)} />
 
       {/* Add Pass Modal */}
       <AddPassModal
