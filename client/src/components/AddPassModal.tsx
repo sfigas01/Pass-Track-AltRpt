@@ -23,18 +23,24 @@ export function AddPassModal({ open, onOpenChange, onSubmit, children }: AddPass
   const [formData, setFormData] = useState<Partial<InsertClassPass>>({});
   const [expirationDate, setExpirationDate] = useState<Date>();
   const [doesNotExpire, setDoesNotExpire] = useState(false);
+  const [costDisplayValue, setCostDisplayValue] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.studioName || !formData.totalClasses || !formData.cost || (!expirationDate && !doesNotExpire)) {
+    // Parse cost from display value
+    const costValue = parseFloat(costDisplayValue) || 0;
+    const costInCents = Math.round(costValue * 100);
+    
+    // Validate required fields (cost can be 0, so check for valid number)
+    if (!formData.studioName || !formData.totalClasses || costDisplayValue === '' || (!expirationDate && !doesNotExpire)) {
       return;
     }
 
     const passData = {
       studioName: formData.studioName,
       totalClasses: formData.totalClasses,
-      cost: formData.cost,
+      cost: costInCents,
       notes: formData.notes || undefined,
       expirationDate: doesNotExpire ? undefined : expirationDate,
       purchaseDate: new Date(), // Auto-fill with today's date
@@ -46,6 +52,7 @@ export function AddPassModal({ open, onOpenChange, onSubmit, children }: AddPass
     setFormData({});
     setExpirationDate(undefined);
     setDoesNotExpire(false);
+    setCostDisplayValue('');
     onOpenChange?.(false);
   };
 
@@ -97,13 +104,12 @@ export function AddPassModal({ open, onOpenChange, onSubmit, children }: AddPass
                 inputMode="decimal"
                 placeholder="120.00"
                 className="pl-8"
-                value={formData.cost ? (formData.cost / 100).toFixed(2) : ''}
+                value={costDisplayValue}
                 onChange={(e) => {
-                  // Allow any input but only parse valid numbers
                   const inputValue = e.target.value;
+                  // Allow typing numbers and one decimal point
                   if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
-                    const dollarValue = parseFloat(inputValue) || 0;
-                    updateFormData('cost', Math.round(dollarValue * 100)); // Convert to cents
+                    setCostDisplayValue(inputValue);
                   }
                 }}
                 data-testid="input-cost"
