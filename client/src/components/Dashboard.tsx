@@ -113,7 +113,7 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background border-b px-4 py-3">
         <div className="flex items-center justify-between mb-3">
-          <h1 className="text-xl font-bold" data-testid="title-app">FitPass</h1>
+          <h1 className="text-xl font-bold" data-testid="title-app">PassTrack</h1>
           <Button
             variant="ghost"
             size="icon"
@@ -198,7 +198,7 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
             
             {/* Spending Analytics - Moved to bottom */}
             {passes.length > 0 && (
-              <section className="pb-32">
+              <section className="pb-8">
                 {/* Total Spent Card */}
                 <Card className="p-4 mb-3">
                   <div className="flex items-center gap-3">
