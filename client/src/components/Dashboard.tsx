@@ -80,30 +80,33 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
 
   const emptyState = getEmptyStateMessage();
 
-  // Calculate spending analytics
-  const spendingAnalytics = useMemo(() => {
+  // Calculate usage analytics
+  const usageAnalytics = useMemo(() => {
     const totalSpent = passes.reduce((sum, pass) => sum + pass.cost, 0);
     
-    const spendingByStudio = passes.reduce((acc, pass) => {
+    const usageByStudio = passes.reduce((acc, pass) => {
       if (!acc[pass.studioName]) {
         acc[pass.studioName] = 0;
       }
-      acc[pass.studioName] += pass.cost;
+      // Calculate classes used (purchased - remaining)
+      acc[pass.studioName] += (pass.totalClasses - pass.remainingClasses);
       return acc;
     }, {} as Record<string, number>);
 
     // Generate colors for pie chart
     const colors = ['#8b5cf6', '#06b6d4', '#f59e0b', '#10b981', '#ef4444', '#f97316', '#3b82f6', '#ec4899'];
     
-    const pieData = Object.entries(spendingByStudio).map(([name, amount], index) => ({
-      name,
-      value: amount / 100, // Convert cents to dollars for display
-      color: colors[index % colors.length],
-    }));
+    const pieData = Object.entries(usageByStudio)
+      .filter(([, usage]) => usage > 0) // Only show studios with actual usage
+      .map(([name, usage], index) => ({
+        name,
+        value: usage,
+        color: colors[index % colors.length],
+      }));
 
     return {
       totalSpent,
-      spendingByStudio,
+      usageByStudio,
       pieData,
     };
   }, [passes]);
@@ -206,21 +209,21 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
                     <div>
                       <p className="text-sm text-muted-foreground">Total Spent</p>
                       <p className="text-2xl font-bold" data-testid="text-total-spent">
-                        ${(spendingAnalytics.totalSpent / 100).toFixed(2)}
+                        ${(usageAnalytics.totalSpent / 100).toFixed(2)}
                       </p>
                     </div>
                   </div>
                 </Card>
                 
                 {/* Pie Chart */}
-                {spendingAnalytics.pieData.length > 1 && (
+                {usageAnalytics.pieData.length > 1 && (
                   <Card className="p-4">
-                    <h4 className="text-sm font-medium text-center mb-3">Spending by Studio</h4>
+                    <h4 className="text-sm font-medium text-center mb-3">Usage by Studio</h4>
                     <div className="h-48">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
-                            data={spendingAnalytics.pieData}
+                            data={usageAnalytics.pieData}
                             cx="50%"
                             cy="50%"
                             innerRadius={40}
@@ -228,18 +231,18 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
                             paddingAngle={2}
                             dataKey="value"
                           >
-                            {spendingAnalytics.pieData.map((entry, index) => (
+                            {usageAnalytics.pieData.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                           </Pie>
                           <Tooltip 
-                            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']}
+                            formatter={(value: number) => [`${value} classes`, 'Used']}
                           />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
-                      {spendingAnalytics.pieData.map((entry, index) => (
+                      {usageAnalytics.pieData.map((entry, index) => (
                         <div 
                           key={entry.name} 
                           className="flex items-center gap-2 text-xs"
@@ -250,7 +253,7 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
                             style={{ backgroundColor: entry.color }}
                           />
                           <span className="truncate font-medium">{entry.name}</span>
-                          <span className="text-muted-foreground">${entry.value.toFixed(0)}</span>
+                          <span className="text-muted-foreground">{entry.value} classes</span>
                         </div>
                       ))}
                     </div>
