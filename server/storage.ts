@@ -11,6 +11,8 @@ export interface IStorage {
   createClassPass(pass: InsertClassPass & { purchaseDate: Date }): Promise<ClassPass>;
   updateClassPass(id: string, updates: Partial<ClassPass>): Promise<ClassPass | undefined>;
   deleteClassPass(id: string): Promise<boolean>;
+  archiveClassPass(id: string): Promise<ClassPass | undefined>;
+  unarchiveClassPass(id: string): Promise<ClassPass | undefined>;
   
   getClassBooking(id: string): Promise<ClassBooking | undefined>;
   getClassBookingsByPassId(passId: string): Promise<ClassBooking[]>;
@@ -57,6 +59,14 @@ export class DatabaseStorage implements IStorage {
       .delete(classPasses)
       .where(eq(classPasses.id, id));
     return (result.rowCount || 0) > 0;
+  }
+
+  async archiveClassPass(id: string): Promise<ClassPass | undefined> {
+    return this.updateClassPass(id, { archived: true });
+  }
+
+  async unarchiveClassPass(id: string): Promise<ClassPass | undefined> {
+    return this.updateClassPass(id, { archived: false });
   }
 
   async getClassBooking(id: string): Promise<ClassBooking | undefined> {
