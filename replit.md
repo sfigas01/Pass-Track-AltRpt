@@ -1,6 +1,6 @@
 # Overview
 
-FitPass is a mobile-first fitness class pass tracking application that helps users manage their gym and studio memberships. The app allows users to track remaining classes, monitor expiration dates, and check into classes across multiple fitness studios. Built with a React frontend and Express backend, it focuses on clean, accessible design patterns inspired by fitness apps like Nike Training Club and productivity tools like Linear.
+PassTrack is a mobile-first fitness class pass tracking application that helps users manage their gym and studio memberships. The app allows users to track remaining classes, monitor expiration dates, check into classes, and archive passes they no longer need across multiple fitness studios. Built with a React frontend and Express backend, it focuses on clean, accessible design patterns inspired by fitness apps like Nike Training Club and productivity tools like Linear.
 
 # User Preferences
 
@@ -39,10 +39,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Application Features
 - **Pass Management**: Create, view, and track fitness class passes
-- **Usage Tracking**: Monitor remaining classes and expiration dates
+- **Usage Tracking**: Monitor remaining classes and expiration dates through usage analytics
 - **Studio Support**: Multi-studio pass management
 - **Check-in System**: Record class attendance and update remaining counts
 - **Status Indicators**: Visual feedback for active, expiring, and expired passes
+- **Archive System**: Archive passes no longer needed to keep dashboard clean and focused
+- **Usage Analytics**: Pie chart visualization showing class usage by studio
+- **Pass Extensions**: Add additional classes and cost to existing passes
 
 # External Dependencies
 
