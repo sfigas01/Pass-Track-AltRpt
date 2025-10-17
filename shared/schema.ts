@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -12,6 +12,7 @@ export const classPasses = pgTable("class_passes", {
   expirationDate: timestamp("expiration_date"),
   cost: integer("cost").notNull(), // cost in cents to avoid decimal issues
   notes: text("notes"),
+  archived: boolean("archived").notNull().default(false),
 });
 
 export const classBookings = pgTable("class_bookings", {
@@ -27,6 +28,7 @@ export const insertClassPassSchema = createInsertSchema(classPasses).omit({
   id: true,
   remainingClasses: true,
   purchaseDate: true,
+  archived: true,
 }).extend({
   totalClasses: z.number().min(1).max(999),
   studioName: z.string().min(1).max(100),
