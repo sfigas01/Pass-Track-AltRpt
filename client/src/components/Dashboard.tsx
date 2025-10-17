@@ -17,9 +17,10 @@ interface DashboardProps {
   onViewDetails?: (passId: string) => void;
   onAddPass?: (data: InsertClassPass & { purchaseDate: Date }) => void;
   onExtendPass?: (passId: string, data: { additionalClasses: number; additionalCost: number }) => void;
+  onArchive?: (passId: string) => void;
 }
 
-export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, onExtendPass }: DashboardProps) {
+export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, onExtendPass, onArchive }: DashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -199,6 +200,7 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
                   onCheckIn={onCheckIn}
                   onViewDetails={onViewDetails}
                   onExtend={() => setExtendingPass(pass)}
+                  onArchive={onArchive}
                 />
               ))}
             </div>

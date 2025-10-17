@@ -85,6 +85,28 @@ function PassesRouter() {
     },
   });
 
+  // Mutation for archiving a pass
+  const archivePassMutation = useMutation({
+    mutationFn: async (passId: string) => {
+      const response = await apiRequest('POST', `/api/class-passes/${passId}/archive`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/class-passes'] });
+      toast({
+        title: "Pass Archived",
+        description: "Your class pass has been archived and hidden from view.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to archive pass",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCheckIn = (passId: string) => {
     checkInMutation.mutate(passId);
   };
@@ -102,6 +124,10 @@ function PassesRouter() {
     extendPassMutation.mutate({ passId, data });
   };
 
+  const handleArchive = (passId: string) => {
+    archivePassMutation.mutate(passId);
+  };
+
   return (
     <Dashboard 
       passes={passes}
@@ -109,6 +135,7 @@ function PassesRouter() {
       onViewDetails={handleViewDetails}
       onAddPass={handleAddPass}
       onExtendPass={handleExtendPass}
+      onArchive={handleArchive}
     />
   );
 }

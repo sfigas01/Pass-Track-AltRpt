@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, MapPin, Users, Clock, Plus } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, Plus, Archive } from "lucide-react";
 import { type ClassPass } from "@shared/schema";
 import { differenceInDays, format } from "date-fns";
 
@@ -11,9 +11,10 @@ interface PassCardProps {
   onCheckIn?: (id: string) => void;
   onViewDetails?: (id: string) => void;
   onExtend?: (id: string) => void;
+  onArchive?: (id: string) => void;
 }
 
-export function PassCard({ pass, onCheckIn, onViewDetails, onExtend }: PassCardProps) {
+export function PassCard({ pass, onCheckIn, onViewDetails, onExtend, onArchive }: PassCardProps) {
   const usagePercentage = ((pass.totalClasses - pass.remainingClasses) / pass.totalClasses) * 100;
   const daysUntilExpiry = pass.expirationDate ? differenceInDays(new Date(pass.expirationDate), new Date()) : null;
   
@@ -109,6 +110,14 @@ export function PassCard({ pass, onCheckIn, onViewDetails, onExtend }: PassCardP
             data-testid={`button-details-${pass.id}`}
           >
             Details
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onArchive?.(pass.id)}
+            data-testid={`button-archive-${pass.id}`}
+          >
+            <Archive className="w-3 h-3" />
           </Button>
         </div>
       </div>
