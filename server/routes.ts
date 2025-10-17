@@ -144,6 +144,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/class-passes/:id/archive - Archive a class pass
+  app.post("/api/class-passes/:id/archive", async (req, res) => {
+    try {
+      const pass = await storage.getClassPass(req.params.id);
+      if (!pass) {
+        return res.status(404).json({ message: "Class pass not found" });
+      }
+
+      const updatedPass = await storage.archiveClassPass(req.params.id);
+      res.json(updatedPass);
+    } catch (error) {
+      console.error("Error archiving class pass:", error);
+      res.status(500).json({ message: "Failed to archive class pass" });
+    }
+  });
+
+  // POST /api/class-passes/:id/unarchive - Unarchive a class pass
+  app.post("/api/class-passes/:id/unarchive", async (req, res) => {
+    try {
+      const pass = await storage.getClassPass(req.params.id);
+      if (!pass) {
+        return res.status(404).json({ message: "Class pass not found" });
+      }
+
+      const updatedPass = await storage.unarchiveClassPass(req.params.id);
+      res.json(updatedPass);
+    } catch (error) {
+      console.error("Error unarchiving class pass:", error);
+      res.status(500).json({ message: "Failed to unarchive class pass" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
