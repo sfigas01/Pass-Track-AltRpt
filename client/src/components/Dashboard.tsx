@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Filter, Moon, Sun, DollarSign, Plus } from "lucide-react";
+import { Search, Filter, Moon, Sun, DollarSign, Plus, LogOut } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { type ClassPass, type InsertClassPass } from "@shared/schema";
 import { useTheme } from "./ThemeProvider";
@@ -122,14 +122,24 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
       <header className="sticky top-0 z-30 bg-background border-b px-4 py-3">
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-xl font-bold" data-testid="title-app">PassTrack</h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            data-testid="button-theme-toggle"
-          >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              data-testid="button-theme-toggle"
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => window.location.href = '/api/logout'}
+              data-testid="button-logout"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         
         {/* Search and Filter */}

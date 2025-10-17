@@ -24,6 +24,19 @@ function PassesRouter() {
     return <Landing />;
   }
   
+  // Handle unauthorized errors by redirecting to login
+  const handleError = (error: Error, fallbackMessage: string) => {
+    if (isUnauthorizedError(error)) {
+      window.location.href = '/api/login';
+      return;
+    }
+    toast({
+      title: "Error",
+      description: error.message || fallbackMessage,
+      variant: "destructive",
+    });
+  };
+  
   // Fetch all class passes for authenticated user
   const { data: passes = [], isLoading: isLoadingPasses, refetch } = useQuery<ClassPass[]>({
     queryKey: ['/api/class-passes'],
@@ -42,12 +55,8 @@ function PassesRouter() {
         description: "Your new class pass has been added successfully.",
       });
     },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add class pass",
-        variant: "destructive",
-      });
+    onError: (error: Error) => {
+      handleError(error, "Failed to add class pass");
     },
   });
 
@@ -64,12 +73,8 @@ function PassesRouter() {
         description: "Successfully checked in to your class!",
       });
     },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to check in",
-        variant: "destructive",
-      });
+    onError: (error: Error) => {
+      handleError(error, "Failed to check in");
     },
   });
 
@@ -86,12 +91,8 @@ function PassesRouter() {
         description: "Your class pass has been extended successfully!",
       });
     },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to extend pass",
-        variant: "destructive",
-      });
+    onError: (error: Error) => {
+      handleError(error, "Failed to extend pass");
     },
   });
 
@@ -108,12 +109,8 @@ function PassesRouter() {
         description: "Your class pass has been archived and hidden from view.",
       });
     },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to archive pass",
-        variant: "destructive",
-      });
+    onError: (error: Error) => {
+      handleError(error, "Failed to archive pass");
     },
   });
 
