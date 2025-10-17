@@ -1,18 +1,21 @@
-import { type ClassPass, type InsertClassPass, type ClassBooking, type InsertClassBooking, classPasses, classBookings } from "@shared/schema";
+// Reference: Replit Auth blueprint integration for user operations
+import { type User, type UpsertUser, type ClassPass, type InsertClassPass, type ClassBooking, type InsertClassBooking, users, classPasses, classBookings } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
-
-// modify the interface with any CRUD methods
-// you might need
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
-  getClassPass(id: string): Promise<ClassPass | undefined>;
-  getAllClassPasses(): Promise<ClassPass[]>;
-  createClassPass(pass: InsertClassPass & { purchaseDate: Date }): Promise<ClassPass>;
-  updateClassPass(id: string, updates: Partial<ClassPass>): Promise<ClassPass | undefined>;
-  deleteClassPass(id: string): Promise<boolean>;
-  archiveClassPass(id: string): Promise<ClassPass | undefined>;
-  unarchiveClassPass(id: string): Promise<ClassPass | undefined>;
+  // User operations - required for Replit Auth
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
+  // Class pass operations - now filtered by userId for security
+  getClassPass(id: string, userId: string): Promise<ClassPass | undefined>;
+  getAllClassPasses(userId: string): Promise<ClassPass[]>;
+  createClassPass(pass: InsertClassPass & { purchaseDate: Date; userId: string }): Promise<ClassPass>;
+  updateClassPass(id: string, userId: string, updates: Partial<ClassPass>): Promise<ClassPass | undefined>;
+  deleteClassPass(id: string, userId: string): Promise<boolean>;
+  archiveClassPass(id: string, userId: string): Promise<ClassPass | undefined>;
+  unarchiveClassPass(id: string, userId: string): Promise<ClassPass | undefined>;
   
   getClassBooking(id: string): Promise<ClassBooking | undefined>;
   getClassBookingsByPassId(passId: string): Promise<ClassBooking[]>;
@@ -20,19 +23,45 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async getClassPass(id: string): Promise<ClassPass | undefined> {
-    const [pass] = await db.select().from(classPasses).where(eq(classPasses.id, id));
+  // User operations - required for Replit Auth
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  // Class pass operations - now filtered by userId for security
+  async getClassPass(id: string, userId: string): Promise<ClassPass | undefined> {
+    const [pass] = await db.select().from(classPasses)
+      .where(and(eq(classPasses.id, id), eq(classPasses.userId, userId)));
     return pass || undefined;
   }
 
-  async getAllClassPasses(): Promise<ClassPass[]> {
-    return await db.select().from(classPasses).orderBy(classPasses.purchaseDate);
+  async getAllClassPasses(userId: string): Promise<ClassPass[]> {
+    return await db.select().from(classPasses)
+      .where(eq(classPasses.userId, userId))
+      .orderBy(classPasses.purchaseDate);
   }
 
-  async createClassPass(insertPass: InsertClassPass & { purchaseDate: Date }): Promise<ClassPass> {
+  async createClassPass(insertPass: InsertClassPass & { purchaseDate: Date; userId: string }): Promise<ClassPass> {
     const [pass] = await db
       .insert(classPasses)
       .values({
+        userId: insertPass.userId,
         studioName: insertPass.studioName,
         totalClasses: insertPass.totalClasses,
         remainingClasses: insertPass.totalClasses,
@@ -45,28 +74,28 @@ export class DatabaseStorage implements IStorage {
     return pass;
   }
 
-  async updateClassPass(id: string, updates: Partial<ClassPass>): Promise<ClassPass | undefined> {
+  async updateClassPass(id: string, userId: string, updates: Partial<ClassPass>): Promise<ClassPass | undefined> {
     const [updatedPass] = await db
       .update(classPasses)
       .set(updates)
-      .where(eq(classPasses.id, id))
+      .where(and(eq(classPasses.id, id), eq(classPasses.userId, userId)))
       .returning();
     return updatedPass || undefined;
   }
 
-  async deleteClassPass(id: string): Promise<boolean> {
+  async deleteClassPass(id: string, userId: string): Promise<boolean> {
     const result = await db
       .delete(classPasses)
-      .where(eq(classPasses.id, id));
+      .where(and(eq(classPasses.id, id), eq(classPasses.userId, userId)));
     return (result.rowCount || 0) > 0;
   }
 
-  async archiveClassPass(id: string): Promise<ClassPass | undefined> {
-    return this.updateClassPass(id, { archived: true });
+  async archiveClassPass(id: string, userId: string): Promise<ClassPass | undefined> {
+    return this.updateClassPass(id, userId, { archived: true });
   }
 
-  async unarchiveClassPass(id: string): Promise<ClassPass | undefined> {
-    return this.updateClassPass(id, { archived: false });
+  async unarchiveClassPass(id: string, userId: string): Promise<ClassPass | undefined> {
+    return this.updateClassPass(id, userId, { archived: false });
   }
 
   async getClassBooking(id: string): Promise<ClassBooking | undefined> {

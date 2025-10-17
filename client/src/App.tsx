@@ -1,3 +1,4 @@
+// Reference: Updated with Replit Auth authentication
 import { useState } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient, apiRequest } from "./lib/queryClient";
@@ -8,14 +9,23 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Dashboard } from "@/components/Dashboard";
 import { type ClassPass, type InsertClassPass } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import Landing from "@/pages/Landing";
 import NotFound from "@/pages/not-found";
 
 
 function PassesRouter() {
   const { toast } = useToast();
+  const { user, isAuthenticated, isLoading } = useAuth();
   
-  // Fetch all class passes
-  const { data: passes = [], isLoading, refetch } = useQuery<ClassPass[]>({
+  // Show landing page while loading or if not authenticated
+  if (isLoading || !isAuthenticated) {
+    return <Landing />;
+  }
+  
+  // Fetch all class passes for authenticated user
+  const { data: passes = [], isLoading: isLoadingPasses, refetch } = useQuery<ClassPass[]>({
     queryKey: ['/api/class-passes'],
   });
 
