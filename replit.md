@@ -1,6 +1,19 @@
 # Overview
 
-PassTrack is a mobile-first fitness class pass tracking application that helps users manage their gym and studio memberships. The app allows users to track remaining classes, monitor expiration dates, check into classes, and archive passes they no longer need across multiple fitness studios. Built with a React frontend and Express backend, it focuses on clean, accessible design patterns inspired by fitness apps like Nike Training Club and productivity tools like Linear.
+PassTrack is a secure, mobile-first fitness class pass tracking application that helps users manage their gym and studio memberships with user authentication. The app allows users to track remaining classes, monitor expiration dates, check into classes, and archive passes they no longer need across multiple fitness studios. Built with a React frontend and Express backend with Replit Auth integration, it focuses on clean, accessible design patterns inspired by fitness apps like Nike Training Club and productivity tools like Linear.
+
+## Recent Changes (October 2025)
+
+**Comprehensive Security Implementation**:
+- Added Replit Auth (OIDC) integration for user authentication
+- All API endpoints now require authentication and filter data by user
+- Landing page for logged-out users with login flow
+- Logout functionality with secure session management
+- Rate limiting on API endpoints (100 requests per 15 min, 5 login attempts per 15 min)
+- Production security headers with Helmet
+- CORS configuration for cross-origin security
+- Input validation using Zod schemas for all create/update operations
+- Database schema updated with users table and userId foreign key on class_passes
 
 # User Preferences
 
@@ -19,7 +32,10 @@ Preferred communication style: Simple, everyday language.
 ## Backend Architecture
 - **Runtime**: Node.js with Express.js server
 - **Language**: TypeScript with ES modules
-- **API Design**: RESTful endpoints with `/api` prefix
+- **Authentication**: Replit Auth (OIDC) with session-based authentication
+- **Session Management**: PostgreSQL session store with connect-pg-simple
+- **Security Middleware**: Helmet for security headers, CORS, rate limiting with express-rate-limit
+- **API Design**: RESTful endpoints with `/api` prefix, all protected with authentication
 - **Error Handling**: Centralized middleware for consistent error responses
 - **Development**: Hot module replacement via Vite integration
 
@@ -27,8 +43,9 @@ Preferred communication style: Simple, everyday language.
 - **ORM**: Drizzle ORM for type-safe database operations
 - **Database**: PostgreSQL with Neon serverless driver
 - **Schema**: Strongly typed with Zod validation schemas
-- **Models**: Class passes and class bookings with UUID primary keys
-- **Storage Interface**: Abstract storage layer for CRUD operations
+- **Models**: Users (via Replit Auth), sessions, class passes with UUID primary keys and userId foreign keys
+- **Storage Interface**: Abstract storage layer for CRUD operations with user-scoped data access
+- **Input Validation**: All API mutations validated with Zod schemas (insertClassPassSchema, updateClassPassSchema)
 
 ## Design System
 - **Theme**: Light/dark mode support with CSS custom properties
@@ -38,7 +55,9 @@ Preferred communication style: Simple, everyday language.
 - **Accessibility**: ARIA labels, keyboard navigation, and screen reader support
 
 ## Application Features
-- **Pass Management**: Create, view, and track fitness class passes
+- **User Authentication**: Secure login with Replit Auth (supports Google, GitHub, email/password)
+- **Landing Page**: Welcome screen for logged-out users with app features and login options
+- **Pass Management**: Create, view, and track fitness class passes (per-user isolation)
 - **Usage Tracking**: Monitor remaining classes and expiration dates through usage analytics
 - **Studio Support**: Multi-studio pass management
 - **Check-in System**: Record class attendance and update remaining counts
@@ -46,6 +65,7 @@ Preferred communication style: Simple, everyday language.
 - **Archive System**: Archive passes no longer needed to keep dashboard clean and focused
 - **Usage Analytics**: Pie chart visualization showing class usage by studio
 - **Pass Extensions**: Add additional classes and cost to existing passes
+- **Logout**: Secure logout with session cleanup
 
 # External Dependencies
 
@@ -54,6 +74,12 @@ Preferred communication style: Simple, everyday language.
 - **@tanstack/react-query**: Server state management and caching
 - **drizzle-orm**: Type-safe database ORM with PostgreSQL dialect
 - **express**: Web application framework for API endpoints
+- **express-session**: Session middleware for authentication
+- **connect-pg-simple**: PostgreSQL session store
+- **openid-client**: OpenID Connect client for Replit Auth
+- **helmet**: Security middleware for HTTP headers
+- **cors**: Cross-origin resource sharing configuration
+- **express-rate-limit**: Rate limiting middleware to prevent abuse
 - **react**: Frontend UI framework with hooks and context
 - **vite**: Build tool and development server
 
