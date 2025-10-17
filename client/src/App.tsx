@@ -15,14 +15,9 @@ import Landing from "@/pages/Landing";
 import NotFound from "@/pages/not-found";
 
 
-function PassesRouter() {
+// Separate component for authenticated dashboard view
+function AuthenticatedApp() {
   const { toast } = useToast();
-  const { user, isAuthenticated, isLoading } = useAuth();
-  
-  // Show landing page while loading or if not authenticated
-  if (isLoading || !isAuthenticated) {
-    return <Landing />;
-  }
   
   // Handle unauthorized errors by redirecting to login
   const handleError = (error: Error, fallbackMessage: string) => {
@@ -38,7 +33,7 @@ function PassesRouter() {
   };
   
   // Fetch all class passes for authenticated user
-  const { data: passes = [], isLoading: isLoadingPasses, refetch } = useQuery<ClassPass[]>({
+  const { data: passes = [] } = useQuery<ClassPass[]>({
     queryKey: ['/api/class-passes'],
   });
 
@@ -120,7 +115,6 @@ function PassesRouter() {
 
   const handleViewDetails = (passId: string) => {
     console.log('View details for pass:', passId);
-    // TODO: Navigate to details page or open modal
   };
 
   const handleAddPass = (data: InsertClassPass & { purchaseDate: Date }) => {
@@ -145,6 +139,18 @@ function PassesRouter() {
       onArchive={handleArchive}
     />
   );
+}
+
+// Main router that switches between landing and dashboard
+function PassesRouter() {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  // Show landing page while loading or if not authenticated
+  if (isLoading || !isAuthenticated) {
+    return <Landing />;
+  }
+
+  return <AuthenticatedApp />;
 }
 
 function App() {
