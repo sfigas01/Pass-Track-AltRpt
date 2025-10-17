@@ -26,8 +26,11 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
   const [extendingPass, setExtendingPass] = useState<ClassPass | null>(null);
   const { theme, setTheme } = useTheme();
 
-  // Filter passes based on search and status
+  // Filter passes based on search and status (exclude archived passes)
   const filteredPasses = passes.filter(pass => {
+    // Always exclude archived passes from the main dashboard view
+    if (pass.archived) return false;
+    
     const matchesSearch = pass.studioName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (pass.notes && pass.notes.toLowerCase().includes(searchTerm.toLowerCase()));
     
@@ -80,11 +83,12 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
 
   const emptyState = getEmptyStateMessage();
 
-  // Calculate usage analytics
+  // Calculate usage analytics (exclude archived passes)
   const usageAnalytics = useMemo(() => {
-    const totalSpent = passes.reduce((sum, pass) => sum + pass.cost, 0);
+    const activePasses = passes.filter(p => !p.archived);
+    const totalSpent = activePasses.reduce((sum, pass) => sum + pass.cost, 0);
     
-    const usageByStudio = passes.reduce((acc, pass) => {
+    const usageByStudio = activePasses.reduce((acc, pass) => {
       if (!acc[pass.studioName]) {
         acc[pass.studioName] = 0;
       }
