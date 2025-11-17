@@ -37,11 +37,16 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
     
     if (filterStatus === "all") return matchesSearch;
     
+    // Handle usage-based tracking (no class limit)
+    if (pass.trackingType === 'usage_based') {
+      return matchesSearch; // Usage-based passes don't have expiry/active filters
+    }
+
     // Handle non-expiring passes (where expirationDate is null)
     if (!pass.expirationDate) {
       switch (filterStatus) {
         case "active":
-          return matchesSearch && pass.remainingClasses > 0;
+          return matchesSearch && (pass.remainingClasses || 0) > 0;
         case "expiring":
         case "expired":
           return false; // Non-expiring passes can't be expiring or expired
@@ -54,11 +59,11 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
     
     switch (filterStatus) {
       case "active":
-        return matchesSearch && pass.remainingClasses > 0 && daysUntilExpiry > 0;
+        return matchesSearch && (pass.remainingClasses || 0) > 0 && daysUntilExpiry > 0;
       case "expiring":
         return matchesSearch && daysUntilExpiry <= 7 && daysUntilExpiry > 0;
       case "expired":
-        return matchesSearch && (daysUntilExpiry <= 0 || pass.remainingClasses === 0);
+        return matchesSearch && (daysUntilExpiry <= 0 || (pass.remainingClasses || 0) === 0);
       default:
         return matchesSearch;
     }
@@ -93,8 +98,11 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
       if (!acc[pass.studioName]) {
         acc[pass.studioName] = 0;
       }
-      // Calculate classes used (purchased - remaining)
-      acc[pass.studioName] += (pass.totalClasses - pass.remainingClasses);
+      // Calculate classes used (purchased - remaining) for class packs only
+      if (pass.trackingType === 'class_pack' && pass.totalClasses && pass.remainingClasses !== null) {
+        acc[pass.studioName] += (pass.totalClasses - pass.remainingClasses);
+      }
+      // For usage-based, we'll need to fetch session data separately
       return acc;
     }, {} as Record<string, number>);
 

@@ -126,7 +126,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Class pass not found" });
       }
 
-      if (pass.remainingClasses <= 0) {
+      if (pass.trackingType !== 'class_pack') {
+        return res.status(400).json({ message: "This endpoint is only for class packs" });
+      }
+
+      if (!pass.remainingClasses || pass.remainingClasses <= 0) {
         return res.status(400).json({ message: "No remaining classes" });
       }
 
@@ -158,9 +162,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Class pass not found" });
       }
 
+      if (pass.trackingType !== 'class_pack') {
+        return res.status(400).json({ message: "This endpoint is only for class packs" });
+      }
+
       const updatedPass = await storage.updateClassPass(req.params.id, userId, {
-        totalClasses: pass.totalClasses + additionalClasses,
-        remainingClasses: pass.remainingClasses + additionalClasses,
+        totalClasses: (pass.totalClasses || 0) + additionalClasses,
+        remainingClasses: (pass.remainingClasses || 0) + additionalClasses,
         cost: pass.cost + Math.round(additionalCost * 100) // Convert dollars to cents
       });
 
