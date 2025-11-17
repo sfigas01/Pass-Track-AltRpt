@@ -2,7 +2,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertClassPassSchema, updateClassPassSchema } from "@shared/schema";
+import { insertClassPassSchema, updateClassPassSchema, insertUsageSessionSchema } from "@shared/schema";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { z } from "zod";
 
@@ -205,6 +205,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error unarchiving class pass");
       res.status(500).json({ message: "Failed to unarchive class pass" });
+    }
+  });
+
+  // Usage Sessions API Routes - For usage-based tracking
+  
+  // GET /api/class-passes/:passId/sessions - Get all usage sessions for a pass
+  app.get("/api/class-passes/:passId/sessions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const sessions = await storage.getUsageSessions(req.params.passId, userId);
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching usage sessions");
+      res.status(500).json({ message: "Failed to fetch usage sessions" });
+    }
+  });
+
+  // POST /api/class-passes/:passId/sessions - Create a new usage session
+  app.post("/api/class-passes/:passId/sessions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate input with schema
+      const sessionData = insertUsageSessionSchema.parse({
+        ...req.body,
+        sessionDate: req.body.sessionDate ? new Date(req.body.sessionDate) : new Date(),
+      });
+
+      const newSession = await storage.createUsageSession(req.params.passId, userId, sessionData);
+      res.status(201).json(newSession);
+    } catch (error) {
+      console.error("Error creating usage session");
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Failed to create usage session" });
+    }
+  });
+
+  // GET /api/class-passes/:passId/analytics - Get usage analytics for a pass
+  app.get("/api/class-passes/:passId/analytics", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const analytics = await storage.getUsageAnalytics(req.params.passId, userId);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching usage analytics");
+      res.status(500).json({ message: "Failed to fetch usage analytics" });
     }
   });
 
