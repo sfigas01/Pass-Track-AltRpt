@@ -55,7 +55,7 @@ function AuthenticatedApp() {
     },
   });
 
-  // Mutation for check-in
+  // Mutation for check-in (class packs)
   const checkInMutation = useMutation({
     mutationFn: async (passId: string) => {
       const response = await apiRequest('POST', `/api/class-passes/${passId}/check-in`);
@@ -70,6 +70,24 @@ function AuthenticatedApp() {
     },
     onError: (error: Error) => {
       handleError(error, "Failed to check in");
+    },
+  });
+
+  // Mutation for logging usage session (usage-based tracking)
+  const logSessionMutation = useMutation({
+    mutationFn: async (data: { passId: string; sessionDate: Date; unitsUsed: number }) => {
+      const response = await apiRequest('POST', `/api/usage-sessions`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/class-passes'] });
+      toast({
+        title: "Session Logged",
+        description: "Your usage session has been logged successfully!",
+      });
+    },
+    onError: (error: Error) => {
+      handleError(error, "Failed to log session");
     },
   });
 
@@ -113,6 +131,10 @@ function AuthenticatedApp() {
     checkInMutation.mutate(passId);
   };
 
+  const handleLogSession = (data: { passId: string; sessionDate: Date; unitsUsed: number }) => {
+    logSessionMutation.mutate(data);
+  };
+
   const handleViewDetails = (passId: string) => {
     console.log('View details for pass:', passId);
   };
@@ -133,6 +155,7 @@ function AuthenticatedApp() {
     <Dashboard 
       passes={passes}
       onCheckIn={handleCheckIn}
+      onLogSession={handleLogSession}
       onViewDetails={handleViewDetails}
       onAddPass={handleAddPass}
       onExtendPass={handleExtendPass}

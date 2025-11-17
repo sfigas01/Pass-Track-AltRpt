@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { PassCard } from "./PassCard";
 import { AddPassModal } from "./AddPassModal";
 import { ExtendPassModal } from "./ExtendPassModal";
+import { LogSessionModal } from "./LogSessionModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,17 +15,19 @@ import { useTheme } from "./ThemeProvider";
 interface DashboardProps {
   passes?: ClassPass[];
   onCheckIn?: (passId: string) => void;
+  onLogSession?: (data: { passId: string; sessionDate: Date; unitsUsed: number }) => void;
   onViewDetails?: (passId: string) => void;
   onAddPass?: (data: InsertClassPass & { purchaseDate: Date }) => void;
   onExtendPass?: (passId: string, data: { additionalClasses: number; additionalCost: number }) => void;
   onArchive?: (passId: string) => void;
 }
 
-export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, onExtendPass, onArchive }: DashboardProps) {
+export function Dashboard({ passes = [], onCheckIn, onLogSession, onViewDetails, onAddPass, onExtendPass, onArchive }: DashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [extendingPass, setExtendingPass] = useState<ClassPass | null>(null);
+  const [loggingSessionPass, setLoggingSessionPass] = useState<ClassPass | null>(null);
   const { theme, setTheme } = useTheme();
 
   // Filter passes based on search and status (exclude archived passes)
@@ -215,7 +218,14 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
                 <PassCard
                   key={pass.id}
                   pass={pass}
-                  onCheckIn={onCheckIn}
+                  onCheckIn={(passId) => {
+                    // Route to appropriate handler based on tracking type
+                    if (pass.trackingType === 'usage_based') {
+                      setLoggingSessionPass(pass);
+                    } else {
+                      onCheckIn?.(passId);
+                    }
+                  }}
                   onViewDetails={onViewDetails}
                   onExtend={() => setExtendingPass(pass)}
                   onArchive={onArchive}
@@ -310,6 +320,17 @@ export function Dashboard({ passes = [], onCheckIn, onViewDetails, onAddPass, on
             onExtendPass?.(extendingPass.id, data);
             setExtendingPass(null);
           }
+        }}
+      />
+
+      {/* Log Session Modal */}
+      <LogSessionModal
+        open={!!loggingSessionPass}
+        onOpenChange={(open) => !open && setLoggingSessionPass(null)}
+        pass={loggingSessionPass}
+        onSubmit={(data) => {
+          onLogSession?.(data);
+          setLoggingSessionPass(null);
         }}
       />
     </div>
