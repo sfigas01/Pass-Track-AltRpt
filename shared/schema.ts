@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, boolean, index, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, boolean, index, jsonb, doublePrecision } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -63,7 +63,7 @@ export const usageSessions = pgTable("usage_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   passId: varchar("pass_id").notNull().references(() => classPasses.id, { onDelete: 'cascade' }),
   sessionDate: timestamp("session_date").notNull(),
-  units: integer("units").notNull(), // number of hours, sessions, etc.
+  units: doublePrecision("units").notNull(), // decimal units (e.g., 2.5 hours)
   cost: integer("cost").notNull(), // auto-calculated cost in cents (units * costPerUnit)
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),

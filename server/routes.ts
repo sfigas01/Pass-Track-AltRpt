@@ -56,21 +56,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       
+      console.log("[DEBUG] Received request body:", JSON.stringify(req.body, null, 2));
+      
       // Validate input with schema
       const passData = insertClassPassSchema.parse({
         ...req.body,
         expirationDate: req.body.expirationDate ? new Date(req.body.expirationDate) : undefined
       });
 
+      console.log("[DEBUG] Validated passData:", JSON.stringify(passData, null, 2));
+
       const newPass = await storage.createClassPass({
         ...passData,
         userId,
         purchaseDate: req.body.purchaseDate ? new Date(req.body.purchaseDate) : new Date()
       });
+      
+      console.log("[DEBUG] Created pass:", newPass.id);
       res.status(201).json(newPass);
     } catch (error) {
-      console.error("Error creating class pass");
+      console.error("Error creating class pass:", error);
       if (error instanceof z.ZodError) {
+        console.error("[DEBUG] Validation errors:", error.errors);
         return res.status(400).json({ message: "Invalid input data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create class pass" });
@@ -217,6 +224,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Usage Sessions API Routes - For usage-based tracking
+  
+  // POST /api/usage-sessions - Create a new usage session
+  app.post("/api/usage-sessions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      console.log("[DEBUG] Creating usage session:", JSON.stringify(req.body, null, 2));
+      
+      // Validate input with schema
+      const sessionData = insertUsageSessionSchema.parse({
+        ...req.body,
+        sessionDate: req.body.sessionDate ? new Date(req.body.sessionDate) : new Date()
+      });
+      
+      // Verify the pass belongs to this user
+      const pass = await storage.getClassPass(req.body.passId, userId);
+      if (!pass) {
+        return res.status(404).json({ message: "Pass not found" });
+      }
+      
+      if (pass.trackingType !== 'usage_based') {
+        return res.status(400).json({ message: "This endpoint is only for usage-based passes" });
+      }
+      
+      // Calculate cost: units × costPerUnit
+      const costInCents = Math.round(sessionData.units * (pass.costPerUnit || 0));
+      
+      const newSession = await storage.createUsageSession(
+        req.body.passId,
+        userId,
+        {
+          sessionDate: sessionData.sessionDate,
+          units: sessionData.units, // Store as-is (decimal)
+          notes: sessionData.notes
+        }
+      );
+      
+      console.log("[DEBUG] Created session:", newSession.id);
+      res.status(201).json(newSession);
+    } catch (error) {
+      console.error("Error creating usage session:", error);
+      if (error instanceof z.ZodError) {
+        console.error("[DEBUG] Validation errors:", error.errors);
+        return res.status(400).json({ message: "Invalid input data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create usage session" });
+    }
+  });
   
   // GET /api/class-passes/:passId/sessions - Get all usage sessions for a pass
   app.get("/api/class-passes/:passId/sessions", isAuthenticated, async (req: any, res) => {

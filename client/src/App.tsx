@@ -75,12 +75,14 @@ function AuthenticatedApp() {
 
   // Mutation for logging usage session (usage-based tracking)
   const logSessionMutation = useMutation({
-    mutationFn: async (data: { passId: string; sessionDate: Date; unitsUsed: number }) => {
+    mutationFn: async (data: { passId: string; sessionDate: Date; units: number }) => {
       const response = await apiRequest('POST', `/api/usage-sessions`, data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      // Invalidate both the passes list and the analytics for the specific pass
       queryClient.invalidateQueries({ queryKey: ['/api/class-passes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/class-passes', variables.passId, 'analytics'] });
       toast({
         title: "Session Logged",
         description: "Your usage session has been logged successfully!",
@@ -131,7 +133,7 @@ function AuthenticatedApp() {
     checkInMutation.mutate(passId);
   };
 
-  const handleLogSession = (data: { passId: string; sessionDate: Date; unitsUsed: number }) => {
+  const handleLogSession = (data: { passId: string; sessionDate: Date; units: number }) => {
     logSessionMutation.mutate(data);
   };
 

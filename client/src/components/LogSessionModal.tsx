@@ -14,7 +14,7 @@ interface LogSessionModalProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   pass: ClassPass | null;
-  onSubmit?: (data: { passId: string; sessionDate: Date; unitsUsed: number }) => void;
+  onSubmit?: (data: { passId: string; sessionDate: Date; units: number }) => void;
 }
 
 export function LogSessionModal({ open, onOpenChange, pass, onSubmit }: LogSessionModalProps) {
@@ -31,7 +31,7 @@ export function LogSessionModal({ open, onOpenChange, pass, onSubmit }: LogSessi
     onSubmit?.({
       passId: pass.id,
       sessionDate,
-      unitsUsed: parseFloat(unitsUsed),
+      units: parseFloat(unitsUsed),
     });
     
     // Reset form

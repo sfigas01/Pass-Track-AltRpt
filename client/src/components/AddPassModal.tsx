@@ -73,9 +73,9 @@ export function AddPassModal({ open, onOpenChange, onSubmit, children }: AddPass
         studioName: formData.studioName,
         unitType: formData.unitType,
         costPerUnit: costPerUnitCents,
-        membershipFee: membershipFeeCents || undefined,
-        membershipPeriod: formData.membershipPeriod || undefined,
-        cost: membershipFeeCents, // Store membership fee in cost field
+        membershipFee: membershipFeeCents > 0 ? membershipFeeCents : undefined,
+        membershipPeriod: membershipFeeCents > 0 && formData.membershipPeriod ? formData.membershipPeriod : undefined,
+        cost: membershipFeeCents, // Store membership fee in cost field (can be 0)
         notes: formData.notes || undefined,
         expirationDate: doesNotExpire ? undefined : expirationDate,
         purchaseDate: new Date(),

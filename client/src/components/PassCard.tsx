@@ -2,9 +2,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, MapPin, Users, Clock, Plus, Archive } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, Plus, Archive, DollarSign } from "lucide-react";
 import { type ClassPass } from "@shared/schema";
 import { differenceInDays, format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 
 interface PassCardProps {
   pass: ClassPass;
@@ -18,6 +19,12 @@ export function PassCard({ pass, onCheckIn, onViewDetails, onExtend, onArchive }
   const isUsageBased = pass.trackingType === 'usage_based';
   const usagePercentage = isUsageBased ? 0 : ((pass.totalClasses! - pass.remainingClasses!) / pass.totalClasses!) * 100;
   const daysUntilExpiry = pass.expirationDate ? differenceInDays(new Date(pass.expirationDate), new Date()) : null;
+  
+  // Fetch usage analytics for usage-based passes
+  const { data: analytics } = useQuery<{ totalUnits: number; totalCost: number; sessionCount: number }>({
+    queryKey: ['/api/class-passes', pass.id, 'analytics'],
+    enabled: isUsageBased,
+  });
   
   const getStatusColor = () => {
     if (isUsageBased) return "default"; // Usage-based passes are always active
@@ -70,9 +77,26 @@ export function PassCard({ pass, onCheckIn, onViewDetails, onExtend, onArchive }
         {/* Progress or Usage Info */}
         {isUsageBased ? (
           <div className="space-y-2 p-3 bg-muted/30 rounded-md">
-            <p className="text-sm text-muted-foreground">
-              Track usage by logging sessions
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Track usage by logging sessions
+              </p>
+            </div>
+            {analytics && analytics.totalCost > 0 && (
+              <div className="flex items-center gap-2 pt-2 border-t border-muted">
+                <DollarSign className="w-4 h-4 text-primary" />
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground">Total Spent</p>
+                  <p className="text-lg font-semibold" data-testid="text-total-spent">
+                    ${(analytics.totalCost / 100).toFixed(2)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">{analytics.sessionCount} sessions</p>
+                  <p className="text-xs text-muted-foreground">{analytics.totalUnits} {pass.unitType}</p>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-2">
