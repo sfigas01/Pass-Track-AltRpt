@@ -1,8 +1,19 @@
 # Overview
 
-PassTrack is a secure, mobile-first fitness class pass tracking application that helps users manage their gym and studio memberships with user authentication. The app allows users to track remaining classes, monitor expiration dates, check into classes, and archive passes they no longer need across multiple fitness studios. Built with a React frontend and Express backend with Replit Auth integration, it focuses on clean, accessible design patterns inspired by fitness apps like Nike Training Club and productivity tools like Linear.
+PassTrack is a secure, mobile-first fitness class pass tracking application that helps users manage both prepaid class passes and usage-based activities with user authentication. The app supports two tracking modes: traditional class packs (countdown from total classes) and pay-per-use activities like golf simulator hours or court reservations. Users can track usage, monitor costs, check into classes, and manage their fitness spending across multiple studios. Built with a React frontend and Express backend with Replit Auth integration, it focuses on clean, accessible design patterns inspired by fitness apps like Nike Training Club and productivity tools like Linear.
 
-## Recent Changes (October 2025)
+## Recent Changes (November 2025)
+
+**Usage-Based Tracking System**:
+- Dual tracking modes: Class Packs (prepaid classes) and Pay Per Use (usage-based activities)
+- Extended database schema with trackingType discriminator and optional usage fields (unitType, costPerUnit, membershipFee)
+- New usageSessions table for logging individual usage sessions with decimal precision units
+- Session logging UI with date picker, units input, and auto-calculated cost display
+- Real-time usage analytics showing total spent, session count, and accumulated units
+- Conditional PassCard rendering: progress bars for class packs, analytics for usage-based activities
+- API endpoints: POST /api/usage-sessions for logging sessions, GET /api/class-passes/:passId/analytics for fetching totals
+
+## Previous Changes (October 2025)
 
 **Comprehensive Security Implementation**:
 - Added Replit Auth (OIDC) integration for user authentication
@@ -43,9 +54,14 @@ Preferred communication style: Simple, everyday language.
 - **ORM**: Drizzle ORM for type-safe database operations
 - **Database**: PostgreSQL with Neon serverless driver
 - **Schema**: Strongly typed with Zod validation schemas
-- **Models**: Users (via Replit Auth), sessions, class passes with UUID primary keys and userId foreign keys
+- **Models**: 
+  - Users (via Replit Auth)
+  - Sessions (PostgreSQL session store)
+  - Class passes with trackingType discriminator ('class_pack' | 'usage_based')
+  - Usage sessions with doublePrecision units for decimal accuracy
+  - All tables use UUID primary keys and userId foreign keys for isolation
 - **Storage Interface**: Abstract storage layer for CRUD operations with user-scoped data access
-- **Input Validation**: All API mutations validated with Zod schemas (insertClassPassSchema, updateClassPassSchema)
+- **Input Validation**: All API mutations validated with Zod schemas (insertClassPassSchema, updateClassPassSchema, insertUsageSessionSchema)
 
 ## Design System
 - **Theme**: Light/dark mode support with CSS custom properties
@@ -57,14 +73,18 @@ Preferred communication style: Simple, everyday language.
 ## Application Features
 - **User Authentication**: Secure login with Replit Auth (supports Google, GitHub, email/password)
 - **Landing Page**: Welcome screen for logged-out users with app features and login options
-- **Pass Management**: Create, view, and track fitness class passes (per-user isolation)
-- **Usage Tracking**: Monitor remaining classes and expiration dates through usage analytics
-- **Studio Support**: Multi-studio pass management
-- **Check-in System**: Record class attendance and update remaining counts
+- **Dual Tracking Modes**:
+  - **Class Packs**: Traditional prepaid class passes with countdown tracking (e.g., 10 yoga classes)
+  - **Pay Per Use**: Usage-based activities with cost-per-unit tracking (e.g., $50/hour for golf simulator)
+- **Pass Management**: Create, view, and track both class packs and usage-based activities (per-user isolation)
+- **Session Logging**: Log usage sessions for pay-per-use activities with date, units, and notes
+- **Usage Analytics**: 
+  - Pie chart visualization showing class usage by studio
+  - Real-time cost tracking for usage-based activities (total spent, sessions, accumulated units)
+- **Check-in System**: Record class attendance and update remaining counts for class packs
 - **Status Indicators**: Visual feedback for active, expiring, and expired passes
 - **Archive System**: Archive passes no longer needed to keep dashboard clean and focused
-- **Usage Analytics**: Pie chart visualization showing class usage by studio
-- **Pass Extensions**: Add additional classes and cost to existing passes
+- **Pass Extensions**: Add additional classes and cost to existing class packs
 - **Logout**: Secure logout with session cleanup
 
 # External Dependencies
