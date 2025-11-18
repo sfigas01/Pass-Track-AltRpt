@@ -248,15 +248,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "This endpoint is only for usage-based passes" });
       }
       
-      // Calculate cost: units × costPerUnit
-      const costInCents = Math.round(sessionData.units * (pass.costPerUnit || 0));
-      
+      // Storage layer will handle cost calculation with override if provided
       const newSession = await storage.createUsageSession(
         req.body.passId,
         userId,
         {
           sessionDate: sessionData.sessionDate,
-          units: sessionData.units, // Store as-is (decimal)
+          units: sessionData.units,
+          costPerUnit: sessionData.costPerUnit, // Optional override
           notes: sessionData.notes
         }
       );
