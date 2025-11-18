@@ -15,7 +15,7 @@ import { useTheme } from "./ThemeProvider";
 interface DashboardProps {
   passes?: ClassPass[];
   onCheckIn?: (passId: string) => void;
-  onLogSession?: (data: { passId: string; sessionDate: Date; units: number }) => void;
+  onLogSession?: (data: { passId: string; sessionDate: Date; units: number; costPerUnit?: number }) => void;
   onViewDetails?: (passId: string) => void;
   onAddPass?: (data: InsertClassPass & { purchaseDate: Date }) => void;
   onExtendPass?: (passId: string, data: { additionalClasses: number; additionalCost: number }) => void;

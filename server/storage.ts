@@ -166,8 +166,11 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Invalid pass or not a usage-based tracking pass');
     }
 
+    // Use override costPerUnit if provided, otherwise use the pass's default rate
+    const costPerUnit = session.costPerUnit ?? pass.costPerUnit ?? 0;
+    
     // Calculate cost: units * costPerUnit
-    const cost = Math.round(session.units * (pass.costPerUnit || 0));
+    const cost = Math.round(session.units * costPerUnit);
 
     const [usageSession] = await db
       .insert(usageSessions)
@@ -175,6 +178,7 @@ export class DatabaseStorage implements IStorage {
         passId,
         sessionDate: session.sessionDate,
         units: session.units,
+        costPerUnit,
         cost,
         notes: session.notes || null,
       })

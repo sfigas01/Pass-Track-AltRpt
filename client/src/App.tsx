@@ -75,7 +75,7 @@ function AuthenticatedApp() {
 
   // Mutation for logging usage session (usage-based tracking)
   const logSessionMutation = useMutation({
-    mutationFn: async (data: { passId: string; sessionDate: Date; units: number }) => {
+    mutationFn: async (data: { passId: string; sessionDate: Date; units: number; costPerUnit?: number }) => {
       const response = await apiRequest('POST', `/api/usage-sessions`, data);
       return response.json();
     },
@@ -133,7 +133,7 @@ function AuthenticatedApp() {
     checkInMutation.mutate(passId);
   };
 
-  const handleLogSession = (data: { passId: string; sessionDate: Date; units: number }) => {
+  const handleLogSession = (data: { passId: string; sessionDate: Date; units: number; costPerUnit?: number }) => {
     logSessionMutation.mutate(data);
   };
 

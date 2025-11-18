@@ -14,12 +14,13 @@ interface LogSessionModalProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   pass: ClassPass | null;
-  onSubmit?: (data: { passId: string; sessionDate: Date; units: number }) => void;
+  onSubmit?: (data: { passId: string; sessionDate: Date; units: number; costPerUnit?: number }) => void;
 }
 
 export function LogSessionModal({ open, onOpenChange, pass, onSubmit }: LogSessionModalProps) {
   const [sessionDate, setSessionDate] = useState<Date>(new Date());
   const [unitsUsed, setUnitsUsed] = useState<string>('');
+  const [costPerUnitOverride, setCostPerUnitOverride] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,21 +29,34 @@ export function LogSessionModal({ open, onOpenChange, pass, onSubmit }: LogSessi
       return;
     }
 
-    onSubmit?.({
+    const data: { passId: string; sessionDate: Date; units: number; costPerUnit?: number } = {
       passId: pass.id,
       sessionDate,
       units: parseFloat(unitsUsed),
-    });
+    };
+
+    // Include override if provided
+    if (costPerUnitOverride && parseFloat(costPerUnitOverride) > 0) {
+      data.costPerUnit = Math.round(parseFloat(costPerUnitOverride) * 100); // convert to cents
+    }
+
+    onSubmit?.(data);
     
     // Reset form
     setSessionDate(new Date());
     setUnitsUsed('');
+    setCostPerUnitOverride('');
     onOpenChange?.(false);
   };
 
   if (!pass) return null;
 
-  const calculatedCost = ((pass.costPerUnit || 0) / 100) * parseFloat(unitsUsed || '0');
+  // Use override if provided, otherwise use default
+  const effectiveCostPerUnit = costPerUnitOverride && parseFloat(costPerUnitOverride) > 0
+    ? parseFloat(costPerUnitOverride)
+    : ((pass.costPerUnit || 0) / 100);
+  
+  const calculatedCost = effectiveCostPerUnit * parseFloat(unitsUsed || '0');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -99,6 +113,33 @@ export function LogSessionModal({ open, onOpenChange, pass, onSubmit }: LogSessi
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="costPerUnit">
+              Cost Per {pass.unitType ? pass.unitType.slice(0, -1) : 'Unit'} (Optional)
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <Input
+                id="costPerUnit"
+                type="text"
+                inputMode="decimal"
+                placeholder={((pass.costPerUnit || 0) / 100).toFixed(2)}
+                value={costPerUnitOverride}
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                    setCostPerUnitOverride(inputValue);
+                  }
+                }}
+                className="pl-7"
+                data-testid="input-cost-override"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Default: ${((pass.costPerUnit || 0) / 100).toFixed(2)} per {pass.unitType ? pass.unitType.slice(0, -1) : 'unit'}
+            </p>
+          </div>
+
           {unitsUsed && parseFloat(unitsUsed) > 0 && (
             <div className="p-3 bg-muted/30 rounded-md">
               <div className="flex justify-between items-center">
@@ -107,6 +148,11 @@ export function LogSessionModal({ open, onOpenChange, pass, onSubmit }: LogSessi
                   ${calculatedCost.toFixed(2)}
                 </span>
               </div>
+              {costPerUnitOverride && parseFloat(costPerUnitOverride) > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Using custom rate: ${parseFloat(costPerUnitOverride).toFixed(2)}/{pass.unitType ? pass.unitType.slice(0, -1) : 'unit'}
+                </p>
+              )}
             </div>
           )}
 

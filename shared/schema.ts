@@ -64,6 +64,7 @@ export const usageSessions = pgTable("usage_sessions", {
   passId: varchar("pass_id").notNull().references(() => classPasses.id, { onDelete: 'cascade' }),
   sessionDate: timestamp("session_date").notNull(),
   units: doublePrecision("units").notNull(), // decimal units (e.g., 2.5 hours)
+  costPerUnit: integer("cost_per_unit").notNull(), // actual rate used for this session in cents (can be overridden)
   cost: integer("cost").notNull(), // auto-calculated cost in cents (units * costPerUnit)
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -119,10 +120,12 @@ export const insertUsageSessionSchema = createInsertSchema(usageSessions).omit({
   id: true,
   passId: true, // will be provided in API route
   cost: true, // auto-calculated from units * costPerUnit
+  costPerUnit: true, // optional override, defaults to pass.costPerUnit
   createdAt: true,
 }).extend({
   sessionDate: z.date(),
   units: z.number().min(0.1).max(999),
+  costPerUnit: z.number().int().positive().optional(), // optional override in cents
   notes: z.string().optional(),
 });
 
