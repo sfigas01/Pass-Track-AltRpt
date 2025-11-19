@@ -51,23 +51,23 @@ export function PassCard({ pass, onCheckIn, onViewDetails, onExtend, onArchive }
             <h3 className="font-semibold text-base" data-testid={`text-studio-${pass.id}`}>
               {pass.studioName}
             </h3>
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground flex items-center gap-1">
-                <Users className="w-3 h-3" />
-                {isUsageBased 
-                  ? `$${((pass.costPerUnit || 0) / 100).toFixed(2)} per ${pass.unitType}`
-                  : `${pass.totalClasses} classes`
-                }
+            <p className="text-sm text-muted-foreground flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              {isUsageBased 
+                ? `$${((pass.costPerUnit || 0) / 100).toFixed(2)} per ${pass.unitType}`
+                : `${pass.totalClasses} classes`
+              }
+            </p>
+            {!isUsageBased && (
+              <p className="text-sm font-medium text-primary mt-1">
+                ${(pass.cost / 100).toFixed(2)}
               </p>
-              <p className="text-sm font-medium text-primary">
-                {isUsageBased
-                  ? pass.membershipFee 
-                    ? `$${(pass.membershipFee / 100).toFixed(2)}/${pass.membershipPeriod}`
-                    : 'No membership'
-                  : `$${(pass.cost / 100).toFixed(2)}`
-                }
+            )}
+            {isUsageBased && pass.membershipFee && pass.membershipFee > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Membership: ${(pass.membershipFee / 100).toFixed(2)}/{pass.membershipPeriod}
               </p>
-            </div>
+            )}
           </div>
           <Badge variant={getStatusColor()} data-testid={`badge-status-${pass.id}`}>
             {getStatusText()}
