@@ -1,12 +1,22 @@
-// Reference: Updated with Replit Auth authentication and security improvements
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { pool } from "./db";
 import { insertClassPassSchema, updateClassPassSchema, insertUsageSessionSchema } from "@shared/schema";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./auth";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check for the hosting platform - registered before auth so it needs no session.
+  app.get("/health", async (_req, res) => {
+    try {
+      await pool.query("select 1");
+      res.json({ status: "ok" });
+    } catch {
+      res.status(503).json({ status: "database unavailable" });
+    }
+  });
+
   // Setup authentication - must be first
   await setupAuth(app);
 

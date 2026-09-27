@@ -1,4 +1,3 @@
-// Reference: Updated with Replit Auth authentication
 import { useState } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient, apiRequest } from "./lib/queryClient";

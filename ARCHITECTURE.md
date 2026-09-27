@@ -1,6 +1,6 @@
 # Overview
 
-PassTrack is a secure, mobile-first fitness class pass tracking application that helps users manage both prepaid class passes and usage-based activities with user authentication. The app supports two tracking modes: traditional class packs (countdown from total classes) and pay-per-use activities like golf simulator hours or court reservations. Users can track usage, monitor costs, check into classes, and manage their fitness spending across multiple studios. Built with a React frontend and Express backend with Replit Auth integration, it focuses on clean, accessible design patterns inspired by fitness apps like Nike Training Club and productivity tools like Linear.
+PassTrack is a secure, mobile-first fitness class pass tracking application that helps users manage both prepaid class passes and usage-based activities with user authentication. The app supports two tracking modes: traditional class packs (countdown from total classes) and pay-per-use activities like golf simulator hours or court reservations. Users can track usage, monitor costs, check into classes, and manage their fitness spending across multiple studios. Built with a React frontend and Express backend with Google sign-in, hosted on Railway, it focuses on clean, accessible design patterns inspired by fitness apps like Nike Training Club and productivity tools like Linear.
 
 ## Recent Changes (November 2025)
 
@@ -16,7 +16,7 @@ PassTrack is a secure, mobile-first fitness class pass tracking application that
 ## Previous Changes (October 2025)
 
 **Comprehensive Security Implementation**:
-- Added Replit Auth (OIDC) integration for user authentication
+- Added OIDC login integration for user authentication (originally Replit Auth; replaced by Google OAuth in the Railway migration)
 - All API endpoints now require authentication and filter data by user
 - Landing page for logged-out users with login flow
 - Logout functionality with secure session management
@@ -43,7 +43,7 @@ Preferred communication style: Simple, everyday language.
 ## Backend Architecture
 - **Runtime**: Node.js with Express.js server
 - **Language**: TypeScript with ES modules
-- **Authentication**: Replit Auth (OIDC) with session-based authentication
+- **Authentication**: Google OAuth (OpenID Connect via openid-client + passport), restricted to the `ALLOWED_EMAILS` allowlist, with session-based authentication
 - **Session Management**: PostgreSQL session store with connect-pg-simple
 - **Security Middleware**: Helmet for security headers, CORS, rate limiting with express-rate-limit
 - **API Design**: RESTful endpoints with `/api` prefix, all protected with authentication
@@ -52,10 +52,10 @@ Preferred communication style: Simple, everyday language.
 
 ## Data Layer
 - **ORM**: Drizzle ORM for type-safe database operations
-- **Database**: PostgreSQL with Neon serverless driver
+- **Database**: PostgreSQL (Railway) via the node-postgres (`pg`) driver
 - **Schema**: Strongly typed with Zod validation schemas
 - **Models**: 
-  - Users (via Replit Auth)
+  - Users (one row per login email; matched by email so ids survive provider changes)
   - Sessions (PostgreSQL session store)
   - Class passes with trackingType discriminator ('class_pack' | 'usage_based')
   - Usage sessions with doublePrecision units for decimal accuracy
@@ -71,7 +71,7 @@ Preferred communication style: Simple, everyday language.
 - **Accessibility**: ARIA labels, keyboard navigation, and screen reader support
 
 ## Application Features
-- **User Authentication**: Secure login with Replit Auth (supports Google, GitHub, email/password)
+- **User Authentication**: Secure login with Google, limited to allowlisted emails
 - **Landing Page**: Welcome screen for logged-out users with app features and login options
 - **Dual Tracking Modes**:
   - **Class Packs**: Traditional prepaid class passes with countdown tracking (e.g., 10 yoga classes)
@@ -87,16 +87,22 @@ Preferred communication style: Simple, everyday language.
 - **Pass Extensions**: Add additional classes and cost to existing class packs
 - **Logout**: Secure logout with session cleanup
 
+# Hosting & Operations
+- **Host**: Railway, one always-on service that serves the API and built frontend on `$PORT`
+- **Config**: `railway.json` (build/start commands, `/health` healthcheck); env vars documented in `.env.example`
+- **Schema changes**: `npm run db:push` (drizzle-kit) run deliberately against the target database; nothing migrates automatically on deploy
+- **Runbook**: `docs/railway-migration.md`
+
 # External Dependencies
 
 ## Core Dependencies
-- **@neondatabase/serverless**: PostgreSQL database connectivity
+- **pg**: PostgreSQL database connectivity
 - **@tanstack/react-query**: Server state management and caching
 - **drizzle-orm**: Type-safe database ORM with PostgreSQL dialect
 - **express**: Web application framework for API endpoints
 - **express-session**: Session middleware for authentication
 - **connect-pg-simple**: PostgreSQL session store
-- **openid-client**: OpenID Connect client for Replit Auth
+- **openid-client**: OpenID Connect client for Google sign-in
 - **helmet**: Security middleware for HTTP headers
 - **cors**: Cross-origin resource sharing configuration
 - **express-rate-limit**: Rate limiting middleware to prevent abuse
@@ -124,5 +130,4 @@ Preferred communication style: Simple, everyday language.
 
 ## Date and Utility Libraries
 - **date-fns**: Date manipulation and formatting utilities
-- **nanoid**: Unique ID generation for database records
 - **wouter**: Lightweight React router for navigation
