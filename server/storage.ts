@@ -1,12 +1,11 @@
-// Reference: Replit Auth blueprint integration for user operations
 import { type User, type UpsertUser, type ClassPass, type InsertClassPass, type ClassBooking, type InsertClassBooking, type UsageSession, type InsertUsageSession, users, classPasses, classBookings, usageSessions } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sum, count } from "drizzle-orm";
 
 export interface IStorage {
-  // User operations - required for Replit Auth
+  // User operations - used by auth
   getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
+  upsertUserByEmail(user: UpsertUser & { email: string }): Promise<User>;
   
   // Class pass operations - now filtered by userId for security
   getClassPass(id: string, userId: string): Promise<ClassPass | undefined>;
@@ -28,20 +27,23 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // User operations - required for Replit Auth
+  // User operations - used by auth
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
+  // Email is the stable identity across login providers: an existing row keeps
+  // its id (and therefore its passes); only profile fields are refreshed.
+  async upsertUserByEmail(userData: UpsertUser & { email: string }): Promise<User> {
+    const { id: _id, ...profile } = userData;
     const [user] = await db
       .insert(users)
       .values(userData)
       .onConflictDoUpdate({
-        target: users.id,
+        target: users.email,
         set: {
-          ...userData,
+          ...profile,
           updatedAt: new Date(),
         },
       })

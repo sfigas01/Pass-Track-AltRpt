@@ -1,4 +1,3 @@
-// Reference: Replit Auth blueprint integration
 import { useQuery } from "@tanstack/react-query";
 
 export function useAuth() {
